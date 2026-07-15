@@ -295,7 +295,7 @@ canvas { width:100%!important; height:100%!important; }
     ← 返回
   </div>
   <div class="login-logo">🍬</div>
-  <div class="login-title">糖智未来</div>
+  <div class="login-title" id="loginTitle" ontouchend="adminTapCount(event)" onclick="adminTapCount(event)">糖智未来</div>
   <div class="login-subtitle">智能血糖管理助手</div>
 
   <div class="login-steps" id="loginSteps">
@@ -325,7 +325,6 @@ canvas { width:100%!important; height:100%!important; }
     <button class="btn-login" id="btnLogin" onclick="doLogin()">登录 / 注册</button>
   </div>
 
-  <div class="admin-entry" onclick="openAdminFromLogin()" title="">⚙️</div>
   <div class="login-agreement">
     登录即表示同意 <a href="#">《用户协议》</a> 和 <a href="#">《隐私政策》</a>
   </div>
@@ -593,8 +592,7 @@ canvas { width:100%!important; height:100%!important; }
           <span class="menu-icon">🔒</span><span class="menu-text">隐私政策</span><span class="menu-arrow">›</span>
         </div>
       </div>
-      <button class="btn btn-outline" onclick="openAdminPage()" style="margin-top:16px;color:var(--primary-dark);border-color:var(--primary);">📊 管理后台</button>
-      <button class="btn btn-outline btn-logout" onclick="doLogout()" style="margin-top:8px;">退出当前账号</button>
+      <button class="btn btn-outline btn-logout" onclick="doLogout()" style="margin-top:16px;">退出当前账号</button>
     </div>
 
     <!-- 设置页 -->
@@ -2436,6 +2434,23 @@ const ADMIN_PASSWORD = 'tangzhi2026';
 let adminLoggedIn = false;
 let currentAdminViewingPhone = null;
 
+// Hidden admin access: triple-tap on login title
+let _adminTapCount = 0;
+let _adminTapTimer = null;
+function adminTapCount(e) {
+  e.preventDefault();
+  _adminTapCount++;
+  if (_adminTapTimer) clearTimeout(_adminTapTimer);
+  _adminTapTimer = setTimeout(() => {
+    if (_adminTapCount >= 3) {
+      _adminTapCount = 0;
+      openAdminFromLogin();
+    } else {
+      _adminTapCount = 0;
+    }
+  }, 600);
+}
+
 function openAdminFromLogin() {
   // From login page, go to admin page
   document.getElementById('loginScreen').style.display = 'none';
@@ -2678,13 +2693,7 @@ function syncToAdminStore() {
   localStorage.setItem('_admin_data_store', JSON.stringify(adminStore));
 }
 
-// Add sync call to existing save functions - patch saveRecord
-const _origSaveRecord = typeof saveRecord === 'function' ? saveRecord : null;
-
-// Patch: after every record save, sync to admin store
-const _observer = new MutationObserver(function() {
-  // This is a lightweight hook - we'll add sync calls in key places
-});
+// syncToAdminStore is called in saveRecord wrapper and saveProfile
 </script>
 </body>
 </html>
