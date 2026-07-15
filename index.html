@@ -325,8 +325,9 @@ canvas { width:100%!important; height:100%!important; }
 
 <!-- ========== 档案填写页 ========== -->
 <div class="profile-screen" id="profileScreen">
-  <div class="profile-top">
-    <h2>📋 建立健康档案</h2>
+  <div class="profile-top" style="position:relative;">
+    <div onclick="backToLoginFromProfile()" style="position:absolute;left:16px;top:20px;font-size:22px;cursor:pointer;padding:4px 8px;z-index:10;">←</div>
+    <h2 style="padding-top:8px;">📋 建立健康档案</h2>
     <div class="sub">完善档案，AI 医生将为你提供更精准的建议</div>
   </div>
   <div style="padding:16px;">
@@ -860,6 +861,12 @@ function showProfileSetup() {
   updateSteps(2);
 }
 
+function backToLoginFromProfile() {
+  document.getElementById('profileScreen').classList.remove('active');
+  document.getElementById('loginScreen').style.display = 'flex';
+  updateSteps(1);
+}
+
 // ===== 糖尿病类型联动表单 =====
 function onDiabetesTypeChange(prefix) {
   const select = document.getElementById(prefix + 'DiabetesType');
@@ -947,7 +954,7 @@ function enterApp() {
 function switchPage(name) {
   if (name === 'admin') { openAdminPage(); return; }
   document.getElementById('page-admin').style.display = 'none';
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display = ''; });
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.tab-item').forEach((t, i) => {
     t.classList.remove('active');
@@ -2429,8 +2436,8 @@ let currentAdminViewingPhone = null;
 
 
 function openAdminPage() {
-  // From within app (profile page)
-  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); });
+  document.querySelectorAll('.page').forEach(p => { p.style.display = ''; });
   document.getElementById('page-admin').style.display = 'block';
   document.getElementById('adminLoginView').style.display = 'block';
   document.getElementById('adminDashboard').style.display = 'none';
@@ -2465,7 +2472,7 @@ function adminBackToApp() {
   document.getElementById('page-admin').style.display = 'none';
   if (currentUser && currentUser.phone) {
     document.getElementById('appContainer').classList.add('active');
-    document.getElementById('page-home').style.display = 'block';
+    document.querySelectorAll('.page').forEach(p => { p.style.display = ''; p.classList.remove('active'); });
     document.getElementById('page-home').classList.add('active');
     refreshHome();
   } else {
