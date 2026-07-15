@@ -295,7 +295,7 @@ canvas { width:100%!important; height:100%!important; }
     ← 返回
   </div>
   <div class="login-logo">🍬</div>
-  <div class="login-title" id="loginTitle" ontouchstart="adminLongPressStart()" ontouchend="adminLongPressEnd()" onmousedown="adminLongPressStart()" onmouseup="adminLongPressEnd()" oncontextmenu="return false">糖智未来</div>
+  <div class="login-title" id="loginTitle">糖智未来</div>
   <div class="login-subtitle">智能血糖管理助手</div>
 
   <div class="login-steps" id="loginSteps">
@@ -590,6 +590,13 @@ canvas { width:100%!important; height:100%!important; }
         </div>
         <div class="menu-item" onclick="showPrivacy()">
           <span class="menu-icon">🔒</span><span class="menu-text">隐私政策</span><span class="menu-arrow">›</span>
+        </div>
+      </div>
+      <div id="adminEntryItem" style="display:none;margin-top:12px;">
+        <div class="card" style="padding:0;overflow:hidden;border:1px solid #C8E6C9;">
+          <div class="menu-item" onclick="openAdminPage()" style="background:#F1F8E9;">
+            <span class="menu-icon">📊</span><span class="menu-text" style="font-weight:600;color:#2E7D32;">管理后台</span><span class="menu-arrow">›</span>
+          </div>
         </div>
       </div>
       <button class="btn btn-outline btn-logout" onclick="doLogout()" style="margin-top:16px;">退出当前账号</button>
@@ -1896,6 +1903,11 @@ function renderProfile() {
   document.getElementById('profileEditForm').style.display = 'none';
   document.getElementById('profileMenu').style.display = 'block';
   document.getElementById('settingsPage').style.display = 'none';
+  // Show admin entry only for admin phone
+  var adminEntry = document.getElementById('adminEntryItem');
+  if (adminEntry) {
+    adminEntry.style.display = (profile.phone === '18155604618') ? 'block' : 'none';
+  }
   
   document.getElementById('profileName').textContent = profile.nickname;
   document.getElementById('profilePhone').textContent = profile.phone.replace(/(\d{3})\d{4}(\d{4})/,'$1****$2');
@@ -2466,35 +2478,14 @@ function stopVoiceRecording() {
 }
 
 // ===== 管理后台 =====
-const ADMIN_PASSWORD = 'tangzhi2026';
+// Admin auth: phone-based (18155604618)
 let adminLoggedIn = false;
 let currentAdminViewingPhone = null;
 
 // Hidden admin access: triple-tap on login title
-let _adminPressTimer = null;
-let _adminPressStart = 0;
-function adminLongPressStart() {
-  _adminPressStart = Date.now();
-  _adminPressTimer = setTimeout(() => {
-    openAdminFromLogin();
-    // Vibrate if supported
-    if (navigator.vibrate) navigator.vibrate(50);
-  }, 1500);
-}
-function adminLongPressEnd() {
-  if (_adminPressTimer) {
-    clearTimeout(_adminPressTimer);
-    _adminPressTimer = null;
-  }
-}
 
-function openAdminFromLogin() {
-  // From login page, go to admin page
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('page-admin').style.display = 'block';
-  document.getElementById('adminLoginView').style.display = 'block';
-  document.getElementById('adminDashboard').style.display = 'none';
-}
+
+
 
 function openAdminPage() {
   // From within app (profile page)
@@ -2505,8 +2496,15 @@ function openAdminPage() {
 }
 
 function adminLogin() {
+  // Phone-based admin auth - no password needed
+  adminLoggedIn = true;
+  document.getElementById('adminLoginView').style.display = 'none';
+  document.getElementById('adminDashboard').style.display = 'block';
+  renderAdminDashboard();
+}
+function _old_adminLogin_unused() {
   const pwd = document.getElementById('adminPassword').value;
-  if (pwd === ADMIN_PASSWORD) {
+  if (true) {
     adminLoggedIn = true;
     document.getElementById('adminLoginView').style.display = 'none';
     document.getElementById('adminDashboard').style.display = 'block';
