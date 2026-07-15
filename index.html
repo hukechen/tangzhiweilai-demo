@@ -1,0 +1,2690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>糖智未来 - 智能血糖管理</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --primary: #4CAF50; --primary-light: #81C784; --primary-dark: #388E3C;
+  --danger: #F44336; --warning: #FF9800;
+  --bg: #f5f7fa; --card: #fff; --text: #333; --text2: #666; --hint: #999; --border: #e8e8e8;
+}
+body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif; background:var(--bg); color:var(--text); max-width:430px; margin:0 auto; min-height:100vh; overflow-x:hidden; }
+
+/* ===== 登录页 ===== */
+.login-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:32px 24px; background:linear-gradient(160deg,#E8F5E9 0%,#f5f7fa 40%,#fff 100%); position:relative; }
+.login-screen.hidden { display:none; }
+.login-back-btn { position:absolute; top:16px; left:16px; padding:8px 16px; font-size:14px; color:var(--primary-dark); background:rgba(255,255,255,.8); border-radius:20px; cursor:pointer; font-weight:500; backdrop-filter:blur(4px); box-shadow:0 2px 8px rgba(0,0,0,.08); transition:.2s; z-index:10; }
+.login-back-btn:active { background:rgba(255,255,255,1); transform:scale(.95); }
+.login-logo { font-size:64px; margin-bottom:8px; }
+.login-title { font-size:26px; font-weight:700; color:var(--primary-dark); margin-bottom:4px; }
+.login-subtitle { font-size:14px; color:var(--hint); margin-bottom:36px; }
+.login-card { width:100%; background:#fff; border-radius:20px; padding:28px 24px; box-shadow:0 8px 32px rgba(0,0,0,.08); }
+.login-card .form-group { margin-bottom:20px; }
+.login-card .form-label { font-size:14px; color:var(--text); font-weight:600; margin-bottom:8px; }
+.phone-input-wrap { display:flex; gap:0; }
+.phone-prefix { display:flex; align-items:center; padding:0 12px; background:#f5f5f5; border:1.5px solid var(--border); border-right:none; border-radius:10px 0 0 10px; font-size:15px; color:var(--text2); font-weight:500; white-space:nowrap; }
+.phone-input-wrap .form-input { border-radius:0 10px 10px 0; }
+.code-input-wrap { display:flex; gap:10px; }
+.code-input-wrap .form-input { flex:1; }
+.btn-code { min-width:110px; height:44px; border-radius:10px; border:1.5px solid var(--primary); background:#fff; color:var(--primary); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:.2s; }
+.btn-code:disabled { border-color:var(--border); color:var(--hint); background:#fafafa; cursor:not-allowed; }
+.btn-code:not(:disabled):active { background:#E8F5E9; }
+.code-hint { margin-top:8px; font-size:12px; color:var(--hint); min-height:18px; }
+.code-hint.show { color:var(--primary-dark); font-weight:500; background:#E8F5E9; padding:6px 10px; border-radius:8px; }
+.btn-login { width:100%; height:50px; border-radius:25px; border:none; font-size:17px; font-weight:600; cursor:pointer; margin-top:8px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:#fff; box-shadow:0 4px 16px rgba(76,175,80,.3); transition:.2s; }
+.btn-login:active { transform:scale(.97); }
+.btn-login:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.login-agreement { text-align:center; margin-top:20px; font-size:12px; color:var(--hint); line-height:1.6; }
+.login-agreement a { color:var(--primary); text-decoration:none; }
+.login-steps { display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:24px; }
+.step { display:flex; align-items:center; gap:4px; font-size:12px; color:var(--hint); }
+.step.active { color:var(--primary-dark); font-weight:600; }
+.step-num { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; border:1.5px solid var(--border); color:var(--hint); }
+.step.active .step-num { background:var(--primary); color:#fff; border-color:var(--primary); }
+.step.done .step-num { background:var(--primary-light); color:#fff; border-color:var(--primary-light); }
+.step-arrow { color:var(--border); font-size:14px; }
+
+/* ===== 档案页 ===== */
+.profile-screen { display:none; min-height:100vh; padding-bottom:40px; }
+.profile-screen.active { display:block; }
+.profile-top { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:#fff; padding:20px 20px 24px; }
+.profile-top h2 { font-size:20px; font-weight:600; }
+.profile-top .sub { font-size:13px; opacity:.8; margin-top:4px; }
+
+/* ===== 主应用 ===== */
+.header { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:#fff; padding:16px 20px; position:sticky; top:0; z-index:100; }
+.header h1 { font-size:18px; font-weight:600; }
+.header .sub { font-size:12px; opacity:.8; margin-top:2px; }
+.header-row { display:flex; justify-content:space-between; align-items:center; }
+.header-user { font-size:12px; opacity:.8; cursor:pointer; }
+.app-container { display:none; }
+.app-container.active { display:block; }
+.page { display:none; padding:16px; padding-bottom:80px; }
+.page.active { display:block; }
+.tab-bar { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; background:#fff; display:flex; border-top:1px solid var(--border); z-index:100; padding-bottom:env(safe-area-inset-bottom); }
+.tab-item { flex:1; text-align:center; padding:8px 0; cursor:pointer; transition:.2s; }
+.tab-item .icon { font-size:22px; margin-bottom:2px; display:block; }
+.tab-item .label { font-size:11px; color:var(--hint); }
+.tab-item.active .label { color:var(--primary); font-weight:600; }
+.tab-item.active .icon { transform:scale(1.15); }
+.card { background:var(--card); border-radius:12px; padding:16px; margin-bottom:12px; box-shadow:0 2px 12px rgba(0,0,0,.06); }
+.card-title { font-size:15px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.glucose-display { text-align:center; padding:20px 0; }
+.glucose-value { font-size:56px; font-weight:700; line-height:1; }
+.glucose-unit { font-size:14px; color:var(--hint); margin-top:4px; }
+.glucose-status { display:inline-block; padding:4px 14px; border-radius:20px; font-size:13px; margin-top:10px; font-weight:500; }
+.status-normal { background:#E8F5E9; color:#2E7D32; }
+.status-high { background:#FFF3E0; color:#E65100; }
+.status-low { background:#FFEBEE; color:#C62828; }
+.status-danger { background:#F44336; color:#fff; }
+.time-slots { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:12px 0; }
+.time-slot { padding:10px 4px; border:1.5px solid var(--border); border-radius:10px; text-align:center; cursor:pointer; font-size:12px; transition:.2s; }
+.time-slot.selected { border-color:var(--primary); background:#E8F5E9; color:var(--primary-dark); font-weight:600; }
+.time-slot .emoji { font-size:18px; display:block; margin-bottom:4px; }
+.form-group { margin-bottom:16px; }
+.form-label { font-size:13px; color:var(--text2); margin-bottom:6px; display:block; font-weight:500; }
+.form-input,.form-select { width:100%; height:44px; border:1.5px solid var(--border); border-radius:10px; padding:0 12px; font-size:15px; background:#fff; outline:none; transition:.2s; }
+.form-input:focus,.form-select:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(76,175,80,.1); }
+.form-textarea { width:100%; min-height:80px; border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; font-size:14px; background:#fff; outline:none; resize:vertical; font-family:inherit; }
+.form-textarea:focus { border-color:var(--primary); }
+.btn { width:100%; height:48px; border-radius:24px; border:none; font-size:16px; font-weight:600; cursor:pointer; transition:.2s; }
+.btn-primary { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:#fff; box-shadow:0 4px 12px rgba(76,175,80,.3); }
+.btn-primary:active { transform:scale(.97); }
+.btn-outline { background:#fff; border:1.5px solid var(--primary); color:var(--primary); }
+.stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+.stat-item { text-align:center; padding:14px 8px; background:#f8faf8; border-radius:12px; }
+.stat-value { font-size:24px; font-weight:700; color:var(--primary-dark); }
+.stat-label { font-size:11px; color:var(--hint); margin-top:4px; }
+
+/* ===== 记录条目可点击 ===== */
+.record-item { display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid #f0f0f0; cursor:pointer; transition:background .2s; border-radius:8px; }
+.record-item:hover { background:#f9fdf9; }
+.record-item:active { background:#eef5ee; transform:scale(0.99); }
+.record-item:last-child { border-bottom:none; }
+.record-item.expanded { background:#f0f9f0; }
+.record-time { font-size:11px; color:var(--hint); margin-top:2px; }
+.record-value { font-size:20px; font-weight:700; }
+.record-click-hint { font-size:10px; color:var(--primary); opacity:0.7; margin-top:2px; }
+
+/* ===== 报告卡片 ===== */
+.report-container { max-height:0; overflow:hidden; transition:max-height 0.5s ease, opacity 0.3s ease, padding 0.3s ease; opacity:0; background:linear-gradient(135deg,#f8fdf8,#eef7ee); border-radius:12px; margin:8px 0; }
+.report-container.open { max-height:2000px; opacity:1; padding:16px; }
+.report-section { margin-bottom:14px; }
+.report-section-title { font-size:14px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.report-glucose-eval { text-align:center; padding:12px; background:#fff; border-radius:10px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+.report-glucose-value { font-size:32px; font-weight:700; }
+.report-glucose-status { font-size:13px; margin-top:4px; font-weight:500; }
+.report-tip { padding:10px 14px; background:#fff; border-radius:10px; font-size:13px; line-height:1.7; color:var(--text2); }
+.report-tip.encourage { background:linear-gradient(135deg,#E8F5E9,#f1f8e9); color:#2E7D32; font-weight:500; }
+.report-diet-item, .report-exercise-item { padding:8px 0; font-size:13px; line-height:1.6; border-bottom:1px dashed #e0e8e0; }
+.report-diet-item:last-child, .report-exercise-item:last-child { border-bottom:none; }
+.report-warn { color:#E65100; font-weight:500; }
+.report-close-btn { display:block; width:100%; text-align:center; padding:8px; background:none; border:1px solid var(--border); border-radius:8px; color:var(--hint); font-size:12px; cursor:pointer; margin-top:8px; }
+.report-close-btn:hover { background:#f5f5f5; }
+/* 趋势分析 */
+.report-trend-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:8px 0; }
+.trend-item { text-align:center; padding:8px 4px; background:#f8faf8; border-radius:8px; }
+.trend-value { font-size:18px; font-weight:700; color:var(--primary-dark); line-height:1.2; }
+.trend-label { font-size:10px; color:var(--hint); margin-top:2px; }
+/* 每周运动计划表 */
+.weekly-plan-table { border-radius:8px; overflow:hidden; border:1px solid #e0e0e0; }
+.plan-row { display:flex; align-items:center; padding:8px 10px; border-bottom:1px solid #f0f0f0; gap:8px; }
+.plan-row:last-child { border-bottom:none; }
+.plan-row.rest { background:#f9f9f9; }
+.plan-row.rest .plan-type { color:var(--hint); }
+.plan-day { font-size:12px; font-weight:600; min-width:65px; color:var(--text); }
+.plan-type { font-size:11px; color:var(--primary); font-weight:500; min-width:36px; text-align:center; background:#E8F5E9; padding:2px 6px; border-radius:4px; }
+.plan-content { font-size:11px; color:var(--text2); flex:1; line-height:1.4; }
+
+/* ===== 图表 ===== */
+.chart-container { width:100%; height:200px; position:relative; margin:12px 0; }
+canvas { width:100%!important; height:100%!important; }
+.empty-state { text-align:center; padding:40px 20px; color:var(--hint); }
+.empty-state .icon { font-size:48px; margin-bottom:12px; opacity:.5; }
+.empty-state .text { font-size:14px; }
+.toast { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,.8); color:#fff; padding:14px 28px; border-radius:12px; font-size:14px; z-index:2000; display:none; text-align:center; }
+.profile-header { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+.avatar { width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--primary-light),var(--primary)); display:flex; align-items:center; justify-content:center; font-size:24px; color:#fff; }
+.profile-name { font-size:18px; font-weight:600; }
+.profile-sub { font-size:12px; color:var(--hint); margin-top:2px; }
+.info-row { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f0f0f0; font-size:14px; }
+.info-row:last-child { border-bottom:none; }
+.info-label { color:var(--text2); }
+.info-value { font-weight:500; }
+.alert-box { padding:12px 16px; border-radius:10px; margin-bottom:12px; font-size:13px; display:flex; align-items:flex-start; gap:8px; line-height:1.5; }
+.alert-warn { background:#FFF8E1; color:#E65100; border:1px solid #FFE082; }
+.alert-success { background:#E8F5E9; color:#2E7D32; border:1px solid #A5D6A7; }
+.alert-danger { background:#FFEBEE; color:#C62828; border:1px solid #EF9A9A; }
+.alert-info { background:#E3F2FD; color:#1565C0; border:1px solid #90CAF9; }
+
+/* ===== AI医生 ===== */
+.chat-area { height:400px; overflow-y:auto; padding:8px 0; }
+.chat-msg { margin:10px 0; display:flex; }
+.chat-msg.user { justify-content:flex-end; }
+.chat-bubble { max-width:80%; padding:12px 16px; border-radius:16px; font-size:14px; line-height:1.6; }
+.chat-msg.user .chat-bubble { background:var(--primary); color:#fff; border-bottom-right-radius:4px; }
+.chat-msg.ai .chat-bubble { background:#f0f4f0; color:var(--text); border-bottom-left-radius:4px; }
+.chat-input-area { display:flex; gap:8px; margin-top:12px; }
+.chat-input { flex:1; height:44px; border:1.5px solid var(--border); border-radius:22px; padding:0 16px; font-size:14px; outline:none; }
+.chat-input:focus { border-color:var(--primary); }
+.chat-send { width:44px; height:44px; border-radius:50%; background:var(--primary); color:#fff; border:none; font-size:18px; cursor:pointer; }
+.quick-tags { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+.quick-tag { padding:6px 14px; background:#f0f4f0; border-radius:20px; font-size:12px; cursor:pointer; color:var(--text2); transition:.2s; }
+.quick-tag:hover { background:#E8F5E9; color:var(--primary-dark); }
+.form-row { display:flex; gap:12px; }
+.form-row .form-group { flex:1; }
+.section-divider { font-size:12px; color:var(--hint); margin:20px 0 8px; padding-left:4px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+.badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:500; }
+.badge-green { background:#E8F5E9; color:#2E7D32; }
+.badge-orange { background:#FFF3E0; color:#E65100; }
+.badge-red { background:#FFEBEE; color:#C62828; }
+.btn-back { background:none; border:none; color:#fff; font-size:14px; cursor:pointer; display:flex; align-items:center; gap:4px; opacity:.9; }
+.btn-logout { margin-top:12px; }
+
+/* ===== 上传检查报告 ===== */
+.upload-report-btn { display:flex; align-items:center; justify-content:center; gap:6px; padding:10px 16px; background:linear-gradient(135deg,#E3F2FD,#BBDEFB); border:1.5px dashed #64B5F6; border-radius:12px; color:#1565C0; font-size:13px; font-weight:500; cursor:pointer; margin-bottom:12px; transition:.2s; }
+.upload-report-btn:hover { background:linear-gradient(135deg,#BBDEFB,#90CAF9); }
+.upload-report-btn:active { transform:scale(0.98); }
+.upload-preview { display:none; margin-bottom:12px; position:relative; border-radius:12px; overflow:hidden; }
+.upload-preview img { width:100%; max-height:200px; object-fit:cover; border-radius:12px; }
+.upload-preview .remove-img { position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,.6); color:#fff; border:none; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.analyzing-overlay { display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.5); border-radius:12px; display:flex; align-items:center; justify-content:center; flex-direction:column; color:#fff; font-size:14px; }
+.analyzing-overlay .spinner { width:32px; height:32px; border:3px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin 1s linear infinite; margin-bottom:8px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.report-analysis { display:none; background:#fff; border-radius:12px; padding:16px; margin:12px 0; border:1px solid #e0e8e0; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+.report-analysis .analysis-header { font-size:14px; font-weight:700; color:var(--primary-dark); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.report-analysis .indicator { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; margin-bottom:6px; border-radius:8px; font-size:13px; }
+.report-analysis .indicator.normal { background:#E8F5E9; }
+.report-analysis .indicator.abnormal { background:#FFEBEE; border:1px solid #EF9A9A; }
+.report-analysis .indicator .ind-name { color:var(--text); font-weight:500; }
+.report-analysis .indicator .ind-value { font-weight:700; }
+.report-analysis .indicator.abnormal .ind-value { color:#C62828; }
+.report-analysis .analysis-detail { margin-top:12px; padding:12px; background:#f8fdf8; border-radius:10px; font-size:13px; line-height:1.7; color:var(--text2); }
+.report-analysis .encourage-msg { margin-top:12px; padding:10px 14px; background:linear-gradient(135deg,#E8F5E9,#f1f8e9); border-radius:10px; font-size:13px; color:#2E7D32; font-weight:500; line-height:1.6; }
+
+/* ===== 隐藏file input ===== */
+.hidden-file-input { display:none; }
+
+/* ===== 菜单项 ===== */
+.menu-item { display:flex; align-items:center; padding:14px 16px; border-bottom:1px solid #f5f5f5; cursor:pointer; transition:background .2s; }
+.menu-item:last-child { border-bottom:none; }
+.menu-item:active { background:#f9f9f9; }
+.menu-icon { font-size:18px; margin-right:12px; width:24px; text-align:center; }
+.menu-text { flex:1; font-size:14px; color:var(--text); }
+.menu-arrow { color:var(--hint); font-size:18px; font-weight:300; }
+
+/* ===== 开关按钮 ===== */
+.menu-toggle { width:44px; height:24px; border-radius:12px; background:#ddd; position:relative; cursor:pointer; transition:background .3s; }
+.menu-toggle.on { background:var(--primary); }
+.toggle-dot { width:20px; height:20px; border-radius:50%; background:#fff; position:absolute; top:2px; left:2px; transition:left .3s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.menu-toggle.on .toggle-dot { left:22px; }
+
+/* ===== 账号卡片 ===== */
+.account-card { display:flex; align-items:center; padding:12px; margin-bottom:8px; background:#f8faf8; border-radius:12px; border:1.5px solid transparent; cursor:pointer; transition:all .2s; }
+.account-card:active { transform:scale(0.99); }
+.account-card.active { border-color:var(--primary); background:#E8F5E9; }
+.account-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--primary-light),var(--primary)); display:flex; align-items:center; justify-content:center; font-size:16px; color:#fff; margin-right:12px; flex-shrink:0; }
+.account-info { flex:1; }
+.account-name { font-size:14px; font-weight:600; }
+.account-phone { font-size:12px; color:var(--hint); margin-top:2px; }
+.account-badge { font-size:10px; padding:2px 8px; border-radius:10px; background:var(--primary); color:#fff; font-weight:500; }
+.account-delete { width:28px; height:28px; border-radius:50%; background:none; border:1px solid #eee; color:var(--hint); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-left:8px; transition:all .2s; }
+.account-delete:hover { background:#FFEBEE; border-color:#EF9A9A; color:#C62828; }
+
+/* ===== 弹窗 ===== */
+.modal-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.5); z-index:3000; align-items:center; justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal-box { background:#fff; border-radius:16px; padding:24px; max-width:340px; width:90%; max-height:80vh; overflow-y:auto; }
+.modal-title { font-size:17px; font-weight:700; margin-bottom:12px; text-align:center; }
+.modal-content { font-size:14px; line-height:1.7; color:var(--text2); }
+.modal-btn { width:100%; height:44px; border-radius:22px; border:none; font-size:15px; font-weight:600; cursor:pointer; margin-top:16px; }
+.modal-btn-primary { background:var(--primary); color:#fff; }
+.modal-btn-cancel { background:#f5f5f5; color:var(--text2); }
+
+/* ===== 语音输入按钮 ===== */
+.voice-btn { width:44px; height:44px; border-radius:50%; background:#f0f4f0; border:1.5px solid var(--border); font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.2s; flex-shrink:0; }
+.voice-btn:active { background:#E8F5E9; }
+.voice-btn.recording { background:#FFEBEE; border-color:#EF5350; animation:voicePulse 1s infinite; }
+@keyframes voicePulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,83,80,.4);} 50%{box-shadow:0 0 0 8px rgba(239,83,80,0);} }
+.voice-status { font-size:12px; color:#EF5350; text-align:center; margin-top:6px; display:none; }
+.voice-status.show { display:block; }
+
+/* ===== 管理后台 ===== */
+.admin-page { padding:16px 16px 100px; }
+.admin-page h3 { font-size:18px; font-weight:700; color:var(--primary-dark); margin:16px 0 12px; }
+.admin-login-box { background:#fff; border-radius:16px; padding:24px; box-shadow:0 4px 20px rgba(0,0,0,.06); margin-top:20px; }
+.admin-stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+.admin-stat-card { background:#fff; border-radius:12px; padding:16px; text-align:center; box-shadow:0 2px 12px rgba(0,0,0,.05); }
+.admin-stat-card .num { font-size:28px; font-weight:700; color:var(--primary-dark); }
+.admin-stat-card .desc { font-size:12px; color:var(--hint); margin-top:4px; }
+.admin-user-item { background:#fff; border-radius:12px; padding:14px 16px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,.04); cursor:pointer; transition:.2s; }
+.admin-user-item:active { background:#f8f8f8; }
+.admin-user-header { display:flex; justify-content:space-between; align-items:center; }
+.admin-user-name { font-weight:600; font-size:15px; color:var(--text); }
+.admin-user-phone { font-size:13px; color:var(--hint); }
+.admin-user-stats { display:flex; gap:16px; margin-top:8px; font-size:12px; color:var(--text2); }
+.admin-detail-card { background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+.admin-detail-title { font-size:14px; font-weight:600; color:var(--primary-dark); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.admin-record-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f5f5f5; font-size:13px; }
+.admin-record-row:last-child { border-bottom:none; }
+.admin-back-btn { padding:8px 16px; font-size:14px; color:var(--primary-dark); background:#E8F5E9; border:none; border-radius:20px; cursor:pointer; font-weight:500; margin-bottom:12px; }
+.admin-export-btn { padding:10px 20px; font-size:13px; color:#fff; background:var(--primary); border:none; border-radius:20px; cursor:pointer; font-weight:500; margin-top:12px; width:100%; }
+
+/* ===== 管理员入口（登录页隐藏入口） ===== */
+.admin-entry { position:absolute; bottom:16px; right:16px; width:24px; height:24px; cursor:pointer; opacity:0.15; font-size:16px; text-align:center; line-height:24px; }
+.admin-entry:active { opacity:0.5; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">标题</div>
+    <div class="modal-content" id="modalContent">内容</div>
+    <button class="modal-btn modal-btn-cancel" onclick="closeModal()">关闭</button>
+  </div>
+</div>
+
+<!-- ========== 登录/注册页 ========== -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-back-btn" id="loginBackBtn" onclick="cancelAddAccount()" style="display:none;">
+    ← 返回
+  </div>
+  <div class="login-logo">🍬</div>
+  <div class="login-title">糖智未来</div>
+  <div class="login-subtitle">智能血糖管理助手</div>
+
+  <div class="login-steps" id="loginSteps">
+    <div class="step active" id="step1"><div class="step-num">1</div> 验证手机</div>
+    <div class="step-arrow">→</div>
+    <div class="step" id="step2"><div class="step-num">2</div> 完善档案</div>
+    <div class="step-arrow">→</div>
+    <div class="step" id="step3"><div class="step-num">3</div> 开始使用</div>
+  </div>
+
+  <div class="login-card">
+    <div class="form-group">
+      <label class="form-label">手机号</label>
+      <div class="phone-input-wrap">
+        <div class="phone-prefix">+86 ▾</div>
+        <input type="tel" class="form-input" id="loginPhone" placeholder="请输入手机号" maxlength="11">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">验证码</label>
+      <div class="code-input-wrap">
+        <input type="text" class="form-input" id="loginCode" placeholder="请输入验证码" maxlength="6">
+        <button class="btn-code" id="btnSendCode" onclick="sendCode()">获取验证码</button>
+      </div>
+      <div class="code-hint" id="codeHint"></div>
+    </div>
+    <button class="btn-login" id="btnLogin" onclick="doLogin()">登录 / 注册</button>
+  </div>
+
+  <div class="admin-entry" onclick="openAdminFromLogin()" title="">⚙️</div>
+  <div class="login-agreement">
+    登录即表示同意 <a href="#">《用户协议》</a> 和 <a href="#">《隐私政策》</a>
+  </div>
+</div>
+
+<!-- ========== 档案填写页 ========== -->
+<div class="profile-screen" id="profileScreen">
+  <div class="profile-top">
+    <h2>📋 建立健康档案</h2>
+    <div class="sub">完善档案，AI 医生将为你提供更精准的建议</div>
+  </div>
+  <div style="padding:16px;">
+    <div class="card">
+      <div class="section-divider">基本信息</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">昵称 *</label>
+          <input type="text" class="form-input" id="fNickname" placeholder="怎么称呼你">
+        </div>
+        <div class="form-group">
+          <label class="form-label">性别 *</label>
+          <select class="form-select" id="fGender">
+            <option value="">请选择</option>
+            <option value="male">男</option>
+            <option value="female">女</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">出生日期 *</label>
+          <input type="date" class="form-input" id="fBirth">
+        </div>
+        <div class="form-group">
+          <label class="form-label">身高 (cm) *</label>
+          <input type="number" class="form-input" id="fHeight" placeholder="170" step="0.1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">体重 (kg) *</label>
+        <input type="number" class="form-input" id="fWeight" placeholder="65" step="0.1">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-divider">健康状况</div>
+      <div class="form-group">
+        <label class="form-label">糖尿病类型 *</label>
+        <select class="form-select" id="fDiabetesType" onchange="onDiabetesTypeChange('f')">
+          <option value="">请选择</option>
+          <option value="none">无糖尿病</option>
+          <option value="prediabetes">糖尿病前期（ prediabetes）</option>
+          <option value="type1">1型糖尿病</option>
+          <option value="type2">2型糖尿病</option>
+          <option value="gestational">妊娠期糖尿病</option>
+          <option value="other">其他类型</option>
+        </select>
+      </div>
+      <div class="form-group" id="fDiagnoseGroup">
+        <label class="form-label" id="fDiagnoseLabel">确诊时间</label>
+        <input type="date" class="form-input" id="fDiagnoseDate">
+      </div>
+      <div class="form-group" id="fMedicationGroup">
+        <label class="form-label">当前用药方案</label>
+        <textarea class="form-textarea" id="fMedication" placeholder="例如：二甲双胍 500mg 每日两次&#10;胰岛素：诺和锐 三餐前各10单位"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">并发症（可多选）</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;" id="complicationGroup">
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:#f8f8f8;border-radius:8px;"><input type="checkbox" value="视网膜病变"> 视网膜病变</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:#f8f8f8;border-radius:8px;"><input type="checkbox" value="肾病"> 肾病</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:#f8f8f8;border-radius:8px;"><input type="checkbox" value="神经病变"> 神经病变</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:#f8f8f8;border-radius:8px;"><input type="checkbox" value="心血管疾病"> 心血管疾病</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:#f8f8f8;border-radius:8px;"><input type="checkbox" value="糖尿病足"> 糖尿病足</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:#f8f8f8;border-radius:8px;"><input type="checkbox" value="无"> 无</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-divider">其他健康信息</div>
+      <div class="form-group">
+        <label class="form-label">家族糖尿病史</label>
+        <select class="form-select" id="fFamilyHistory">
+          <option value="none">无</option>
+          <option value="parents">父母</option>
+          <option value="siblings">兄弟姐妹</option>
+          <option value="parents_siblings">父母+兄弟姐妹</option>
+          <option value="other">其他亲属</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">药物过敏史</label>
+        <input type="text" class="form-input" id="fAllergy" placeholder="如：青霉素过敏，没有则留空">
+      </div>
+      <div class="form-group">
+        <label class="form-label">其他病史</label>
+        <textarea class="form-textarea" id="fOtherDisease" placeholder="高血压、高血脂等其他疾病..."></textarea>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveProfile()" style="margin-bottom:12px;">保存并进入 →</button>
+    <button class="btn btn-outline" onclick="skipProfile()">暂时跳过</button>
+  </div>
+</div>
+
+<!-- ========== 主应用 ========== -->
+<div class="app-container" id="appContainer">
+  <div class="header">
+    <div class="header-row">
+      <div>
+        <h1>🍬 糖智未来</h1>
+        <div class="sub">智能血糖管理助手</div>
+      </div>
+      <div class="header-user" onclick="switchPage('profile')">
+        <span id="headerUserName">👤</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 首页 -->
+  <div class="page active" id="page-home">
+    <div class="card">
+      <div class="glucose-display">
+        <div class="glucose-value" id="currentGlucose">--</div>
+        <div class="glucose-unit">mmol/L</div>
+        <div class="glucose-status status-normal" id="glucoseStatus">暂无记录</div>
+      </div>
+    </div>
+    <div id="alertArea"></div>
+    <div class="card">
+      <div class="card-title">📊 7日趋势</div>
+      <div class="chart-container"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 本周统计</div>
+      <div class="stats-grid">
+        <div class="stat-item"><div class="stat-value" id="statAvg">--</div><div class="stat-label">平均血糖</div></div>
+        <div class="stat-item"><div class="stat-value" id="statCount">0</div><div class="stat-label">测量次数</div></div>
+        <div class="stat-item"><div class="stat-value" id="statInRange">--</div><div class="stat-label">达标率</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📝 最近记录 <span style="font-size:11px;color:var(--hint);font-weight:400;">（近3天 · 点击可生成报告）</span></div>
+      <div id="recentRecords"><div class="empty-state"><div class="icon">📭</div><div class="text">还没有记录，去记录第一条血糖吧</div></div></div>
+    </div>
+  </div>
+
+  <!-- 记录页 -->
+  <div class="page" id="page-record">
+    <div class="card">
+      <div class="card-title">📝 记录血糖</div>
+      <div class="form-group">
+        <label class="form-label">测量时点</label>
+        <div class="time-slots" id="timeSlots">
+          <div class="time-slot" data-value="before_breakfast"><span class="emoji">🌅</span>早餐前</div>
+          <div class="time-slot" data-value="after_breakfast"><span class="emoji">🍳</span>早餐后</div>
+          <div class="time-slot" data-value="before_lunch"><span class="emoji">☀️</span>午餐前</div>
+          <div class="time-slot" data-value="after_lunch"><span class="emoji">🍱</span>午餐后</div>
+          <div class="time-slot" data-value="before_dinner"><span class="emoji">🌆</span>晚餐前</div>
+          <div class="time-slot" data-value="after_dinner"><span class="emoji">🍽️</span>晚餐后</div>
+          <div class="time-slot" data-value="bedtime"><span class="emoji">🌙</span>睡前</div>
+          <div class="time-slot" data-value="random"><span class="emoji">🔔</span>随机</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">血糖值 (mmol/L)</label>
+        <input type="number" class="form-input" id="glucoseInput" placeholder="例如：5.6" step="0.1" min="1" max="35">
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注（可选）</label>
+        <textarea class="form-textarea" id="glucoseNote" placeholder="饮食、运动、用药等情况..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="saveRecord()">保存记录</button>
+    </div>
+    <div class="card">
+      <div class="card-title">📖 历史记录 <span style="font-size:11px;color:var(--hint);font-weight:400;">（近15天 · 点击可生成报告）</span></div>
+      <div id="historyRecords"><div class="empty-state"><div class="icon">📭</div><div class="text">暂无记录</div></div></div>
+    </div>
+  </div>
+
+  <!-- AI医生页 -->
+  <div class="page" id="page-ai">
+    <div class="card">
+      <div class="card-title">🤖 AI 医生助手</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">根据你的血糖数据和健康档案，为你提供个性化建议</p>
+      
+      <!-- 上传检查报告按钮 -->
+      <div class="upload-report-btn" onclick="triggerImageUpload()">
+        📷 上传检查报告
+      </div>
+      <input type="file" accept="image/*" capture="environment" class="hidden-file-input" id="reportFileInput" onchange="handleReportUpload(event)">
+      
+      <!-- 图片预览 -->
+      <div class="upload-preview" id="uploadPreview">
+        <img id="previewImg" src="" alt="报告预览">
+        <button class="remove-img" onclick="removeUploadedImage()">✕</button>
+        <div class="analyzing-overlay" id="analyzingOverlay">
+          <div class="spinner"></div>
+          <div>AI正在分析您的报告...</div>
+        </div>
+      </div>
+      
+      <!-- 检查报告分析结果 -->
+      <div class="report-analysis" id="reportAnalysis"></div>
+      
+      <div class="quick-tags">
+        <div class="quick-tag" onclick="askAI('我刚才血糖偏高，该怎么办？')">血糖偏高怎么办</div>
+        <div class="quick-tag" onclick="askAI('今天午餐吃什么比较好？')">饮食建议</div>
+        <div class="quick-tag" onclick="askAI('适合我的运动方案')">运动建议</div>
+        <div class="quick-tag" onclick="askAI('我的用药时间该怎么安排？')">用药提醒</div>
+        <div class="quick-tag" onclick="askAI('最近血糖波动大，帮我分析原因')">波动分析</div>
+        <div class="quick-tag" onclick="askAI('我低血糖了怎么办？')">低血糖处理</div>
+      </div>
+      <div class="chat-area" id="chatArea">
+        <div class="chat-msg ai"><div class="chat-bubble">你好！我是你的 AI 医生助手 🩺<br><br>我可以为你提供：<br>• 饮食搭配建议<br>• 运动方案推荐<br>• 用药时间提醒<br>• 血糖波动分析<br>• 低血糖应急指导<br>• 📷 检查报告解读（点击上方按钮上传）<br><br>有什么想问的？也可以点上面的快捷问题。</div></div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" class="chat-input" id="chatInput" placeholder="输入你的问题..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceInput()" title="语音输入">🎤</button>
+        <button class="chat-send" onclick="sendChat()">↑</button>
+      </div>
+      <div class="voice-status" id="voiceStatus">🎙️ 正在聆听...请说话</div>
+    </div>
+  </div>
+
+  <!-- 档案页 -->
+  <div class="page" id="page-profile">
+    <div id="profileView" style="display:none;">
+      <div class="card">
+        <div class="profile-header">
+          <div class="avatar" id="profileAvatar">👤</div>
+          <div>
+            <div class="profile-name" id="profileName">--</div>
+            <div class="profile-sub" id="profilePhone">--</div>
+          </div>
+        </div>
+        <div class="info-row"><span class="info-label">性别</span><span class="info-value" id="pGender">--</span></div>
+        <div class="info-row"><span class="info-label">出生日期</span><span class="info-value" id="pBirth">--</span></div>
+        <div class="info-row"><span class="info-label">身高 / 体重</span><span class="info-value" id="pHeightWeight">--</span></div>
+        <div class="info-row"><span class="info-label">BMI</span><span class="info-value" id="pBMI">--</span></div>
+        <div class="info-row"><span class="info-label">糖尿病类型</span><span class="info-value" id="pDiabetes">--</span></div>
+        <div class="info-row"><span class="info-label">病程</span><span class="info-value" id="pDuration">--</span></div>
+        <div class="info-row"><span class="info-label">当前用药</span><span class="info-value" id="pMedication">--</span></div>
+        <div class="info-row"><span class="info-label">并发症</span><span class="info-value" id="pComplication">--</span></div>
+        <div class="info-row"><span class="info-label">家族史</span><span class="info-value" id="pFamily">--</span></div>
+        <div class="info-row"><span class="info-label">过敏史</span><span class="info-value" id="pAllergy">--</span></div>
+      </div>
+      <button class="btn btn-outline" onclick="editProfile()">📝 编辑档案</button>
+    </div>
+
+    <!-- 功能菜单列表 -->
+    <div id="profileMenu" style="display:none;">
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="menu-item" onclick="openSettings()">
+          <span class="menu-icon">⚙️</span><span class="menu-text">设置</span><span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="showAbout()">
+          <span class="menu-icon">ℹ️</span><span class="menu-text">关于糖智未来</span><span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="showHelp()">
+          <span class="menu-icon">❓</span><span class="menu-text">使用帮助</span><span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="showPrivacy()">
+          <span class="menu-icon">🔒</span><span class="menu-text">隐私政策</span><span class="menu-arrow">›</span>
+        </div>
+      </div>
+      <button class="btn btn-outline" onclick="openAdminPage()" style="margin-top:16px;color:var(--primary-dark);border-color:var(--primary);">📊 管理后台</button>
+      <button class="btn btn-outline btn-logout" onclick="doLogout()" style="margin-top:8px;">退出当前账号</button>
+    </div>
+
+    <!-- 设置页 -->
+    <div id="settingsPage" style="display:none;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;cursor:pointer;" onclick="closeSettings()">
+        <span style="font-size:18px;">←</span>
+        <span style="font-size:16px;font-weight:600;">设置</span>
+      </div>
+      
+      <!-- 账号管理 -->
+      <div class="card">
+        <div class="card-title">👥 账号管理 <span style="font-size:11px;color:var(--hint);font-weight:400;" id="accountCount">（1/3）</span></div>
+        <div id="accountList"></div>
+        <button class="btn btn-outline" id="btnAddAccount" onclick="addNewAccount()" style="margin-top:12px;font-size:14px;height:40px;">+ 添加新账号</button>
+      </div>
+
+      <!-- 其他设置 -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="menu-item" onclick="toggleReminder()">
+          <span class="menu-icon">🔔</span><span class="menu-text">测量提醒</span>
+          <span class="menu-toggle" id="reminderToggle">
+            <span class="toggle-dot" id="reminderDot"></span>
+          </span>
+        </div>
+        <div class="menu-item" onclick="toggleSound()">
+          <span class="menu-icon">🔊</span><span class="menu-text">提示音</span>
+          <span class="menu-toggle" id="soundToggle">
+            <span class="toggle-dot" id="soundDot"></span>
+          </span>
+        </div>
+        <div class="menu-item" onclick="exportData()">
+          <span class="menu-icon">📤</span><span class="menu-text">导出数据</span><span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="clearData()">
+          <span class="menu-icon">🗑️</span><span class="menu-text" style="color:#F44336;">清除所有数据</span><span class="menu-arrow">›</span>
+        </div>
+      </div>
+
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-size:13px;color:var(--hint);">糖智未来 v1.0.0</div>
+        <div style="font-size:11px;color:var(--hint);margin-top:4px;">© 2026 糖智未来团队</div>
+      </div>
+    </div>
+    <div id="profileEditForm" style="display:none;">
+      <div class="card">
+        <div class="section-divider">基本信息</div>
+        <div class="form-row"><div class="form-group"><label class="form-label">昵称</label><input type="text" class="form-input" id="eNickname"></div><div class="form-group"><label class="form-label">性别</label><select class="form-select" id="eGender"><option value="male">男</option><option value="female">女</option></select></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">出生日期</label><input type="date" class="form-input" id="eBirth"></div><div class="form-group"><label class="form-label">身高(cm)</label><input type="number" class="form-input" id="eHeight" step="0.1"></div></div>
+        <div class="form-group"><label class="form-label">体重(kg)</label><input type="number" class="form-input" id="eWeight" step="0.1"></div>
+      </div>
+      <div class="card">
+        <div class="section-divider">健康状况</div>
+        <div class="form-group"><label class="form-label">糖尿病类型</label><select class="form-select" id="eDiabetesType" onchange="onDiabetesTypeChange('e')"><option value="none">无糖尿病</option><option value="prediabetes">糖尿病前期</option><option value="type1">1型</option><option value="type2">2型</option><option value="gestational">妊娠期</option><option value="other">其他</option></select></div>
+        <div class="form-group" id="eDiagnoseGroup"><label class="form-label" id="eDiagnoseLabel">确诊时间</label><input type="date" class="form-input" id="eDiagnoseDate"></div>
+        <div class="form-group" id="eMedicationGroup"><label class="form-label">用药方案</label><textarea class="form-textarea" id="eMedication"></textarea></div>
+        <div class="form-group"><label class="form-label">药物过敏史</label><input type="text" class="form-input" id="eAllergy"></div>
+        <div class="form-group"><label class="form-label">其他病史</label><textarea class="form-textarea" id="eOtherDisease" placeholder="高血压、高血脂等其他疾病..."></textarea></div>
+        <button class="btn btn-primary" onclick="updateProfile()">保存修改</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部导航 -->
+  <!-- 管理后台页 -->
+  <div class="page" id="page-admin" style="display:none;">
+    <div class="admin-page">
+      <div id="adminLoginView">
+        <div style="text-align:center;padding:40px 0;">
+          <div style="font-size:48px;margin-bottom:12px;">🔐</div>
+          <h3 style="margin-bottom:8px;">管理后台</h3>
+          <p style="font-size:13px;color:var(--hint);">请输入管理员密码进入</p>
+        </div>
+        <div class="admin-login-box">
+          <div class="form-group">
+            <label class="form-label">管理员密码</label>
+            <input type="password" class="form-input" id="adminPassword" placeholder="请输入密码" onkeydown="if(event.key==='Enter')adminLogin()">
+          </div>
+          <button class="btn-login" onclick="adminLogin()" style="margin-top:12px;">进入后台</button>
+          <button class="btn-back" onclick="adminBackToApp()" style="margin-top:12px;width:100%;text-align:center;color:var(--hint);">返回应用</button>
+        </div>
+      </div>
+      <div id="adminDashboard" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h3 style="margin:0;">📊 数据看板</h3>
+          <button class="admin-back-btn" onclick="adminLogout()">退出后台</button>
+        </div>
+        <div class="admin-stats-grid" id="adminStatsGrid"></div>
+        <h3>👥 用户列表</h3>
+        <div id="adminUserList"></div>
+        <div id="adminUserDetail" style="display:none;"></div>
+        <button class="admin-export-btn" onclick="adminExportData()">📥 导出全部数据（JSON）</button>
+      </div>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <div class="tab-item active" onclick="switchPage('home')"><span class="icon">🏠</span><span class="label">首页</span></div>
+    <div class="tab-item" onclick="switchPage('record')"><span class="icon">📝</span><span class="label">记录</span></div>
+    <div class="tab-item" onclick="switchPage('ai')"><span class="icon">🤖</span><span class="label">AI医生</span></div>
+    <div class="tab-item" onclick="switchPage('profile')"><span class="icon">👤</span><span class="label">我的</span></div>
+  </div>
+</div>
+
+<script>
+// ===== 全局数据 =====
+let records = JSON.parse(localStorage.getItem('glucose_records') || '[]');
+let profile = JSON.parse(localStorage.getItem('user_profile') || 'null');
+let currentUser = JSON.parse(localStorage.getItem('current_user') || 'null');
+let generatedCode = '';
+let codeTimer = null;
+let isAddingNewAccount = false;
+let previousAccountPhone = null; // 记录添加新账号前的账号
+
+// ===== 启动 =====
+(function init() {
+  cleanOldRecords();
+  if (currentUser && currentUser.phone) {
+    // 从当前账号的专属key加载数据（确保数据隔离）
+    const savedProfile = JSON.parse(localStorage.getItem('user_profile_' + currentUser.phone) || 'null');
+    if (savedProfile) {
+      profile = savedProfile;
+      localStorage.setItem('user_profile', JSON.stringify(profile));
+    }
+    records = JSON.parse(localStorage.getItem('glucose_records_' + currentUser.phone) || '[]');
+    if (profile) { enterApp(); } else { showProfileSetup(); }
+  } else { showLogin(); }
+})();
+
+// ===== 清理超期记录 =====
+function cleanOldRecords() {
+  const now = new Date();
+  const fifteenDaysAgo = new Date(now.getTime() - 15 * 24 * 3600 * 1000);
+  records = records.filter(r => new Date(r.measuredAt) > fifteenDaysAgo);
+  localStorage.setItem('glucose_records', JSON.stringify(records));
+}
+
+// ===== 工具函数 =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2200);
+}
+
+function getAge() {
+  if (!profile || !profile.birthDate) return 45;
+  const birth = new Date(profile.birthDate);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+function getBMI() {
+  if (!profile || !profile.heightCm || !profile.weightKg) return 22;
+  return profile.weightKg / Math.pow(profile.heightCm / 100, 2);
+}
+
+function getUserRecords() {
+  // records数组在切换账号时已经从专属key加载，直接返回
+  return records;
+}
+
+function getRecordsInDays(days) {
+  const cutoff = new Date(Date.now() - days * 24 * 3600 * 1000);
+  return getUserRecords().filter(r => new Date(r.measuredAt) > cutoff);
+}
+
+// ===== 登录流程 =====
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('profileScreen').classList.remove('active');
+  document.getElementById('appContainer').classList.remove('active');
+  // 显示或隐藏返回按钮
+  document.getElementById('loginBackBtn').style.display = isAddingNewAccount ? 'block' : 'none';
+  updateSteps(1);
+}
+
+function cancelAddAccount() {
+  // 取消添加新账号，返回之前的账号
+  isAddingNewAccount = false;
+  if (previousAccountPhone) {
+    // 恢复到之前的账号
+    const prev = previousAccountPhone;
+    currentUser = { phone: prev, loginTime: new Date().toISOString() };
+    localStorage.setItem('current_user', JSON.stringify(currentUser));
+    profile = JSON.parse(localStorage.getItem('user_profile_' + prev) || 'null');
+    if (profile) localStorage.setItem('user_profile', JSON.stringify(profile));
+    records = JSON.parse(localStorage.getItem('glucose_records_' + prev) || '[]');
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appContainer').classList.add('active');
+    document.getElementById('headerUserName').textContent = '👤 ' + (profile ? profile.nickname : '新用户');
+    refreshHome();
+    renderProfile();
+    showToast('已返回');
+  } else {
+    showLogin();
+  }
+  previousAccountPhone = null;
+}
+
+function updateSteps(current) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('step' + i);
+    el.classList.remove('active', 'done');
+    if (i < current) el.classList.add('done');
+    else if (i === current) el.classList.add('active');
+  }
+}
+
+function sendCode() {
+  const phone = document.getElementById('loginPhone').value.trim();
+  if (!/^1\d{10}$/.test(phone)) { showToast('请输入有效的11位手机号'); return; }
+  generatedCode = String(Math.floor(100000 + Math.random() * 900000));
+  const btn = document.getElementById('btnSendCode');
+  btn.disabled = true;
+  let sec = 60;
+  btn.textContent = sec + 's 后重发';
+  const hint = document.getElementById('codeHint');
+  hint.className = 'code-hint show';
+  hint.innerHTML = '📱 验证码已发送至 ' + phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') + '<br>你的验证码是：<b>' + generatedCode + '</b>';
+  codeTimer = setInterval(() => {
+    sec--;
+    if (sec <= 0) { clearInterval(codeTimer); btn.disabled = false; btn.textContent = '重新获取'; }
+    else { btn.textContent = sec + 's 后重发'; }
+  }, 1000);
+  document.getElementById('loginCode').focus();
+}
+
+function doLogin() {
+  const phone = document.getElementById('loginPhone').value.trim();
+  const code = document.getElementById('loginCode').value.trim();
+  if (!/^1\d{10}$/.test(phone)) { showToast('请输入有效的11位手机号'); return; }
+  if (!code) { showToast('请输入验证码'); return; }
+  if (code !== generatedCode) { showToast('验证码错误，请重新输入'); return; }
+  isAddingNewAccount = false; // 重置标记
+  currentUser = { phone: phone, loginTime: new Date().toISOString() };
+  localStorage.setItem('current_user', JSON.stringify(currentUser));
+  
+  // 注册到账号列表（如不存在）
+  let accounts = getAllAccounts();
+  if (!accounts.find(a => a.phone === phone)) {
+    accounts.push({ phone: phone, nickname: '', hasProfile: false, lastActive: new Date().toISOString() });
+    saveAllAccounts(accounts);
+  }
+  
+  const savedProfile = JSON.parse(localStorage.getItem('user_profile_' + phone) || 'null');
+  if (savedProfile && savedProfile.nickname) {
+    profile = savedProfile;
+    localStorage.setItem('user_profile', JSON.stringify(profile));
+    // 同步账号信息
+    let accs = getAllAccounts();
+    const idx = accs.findIndex(a => a.phone === phone);
+    if (idx >= 0) { accs[idx].nickname = profile.nickname; accs[idx].hasProfile = true; saveAllAccounts(accs); }
+    // 加载该账号的专属记录
+    records = JSON.parse(localStorage.getItem('glucose_records_' + phone) || '[]');
+    localStorage.setItem('glucose_records', JSON.stringify(records));
+    enterApp();
+  }
+  else { records = []; showProfileSetup(); }
+}
+
+function showProfileSetup() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('profileScreen').classList.add('active');
+  document.getElementById('appContainer').classList.remove('active');
+  updateSteps(2);
+}
+
+// ===== 糖尿病类型联动表单 =====
+function onDiabetesTypeChange(prefix) {
+  const select = document.getElementById(prefix + 'DiabetesType');
+  const val = select.value;
+  const diagnoseGroup = document.getElementById(prefix + 'DiagnoseGroup');
+  const diagnoseLabel = document.getElementById(prefix + 'DiagnoseLabel');
+  const medicationGroup = document.getElementById(prefix + 'MedicationGroup');
+  
+  if (val === 'none') {
+    // 无糖尿病：隐藏确诊时间，用药可选
+    if (diagnoseGroup) diagnoseGroup.style.display = 'none';
+    if (diagnoseLabel) diagnoseLabel.textContent = '确诊时间';
+    if (medicationGroup) {
+      medicationGroup.querySelector('.form-label').textContent = '日常用药/保健品（选填）';
+      medicationGroup.querySelector('textarea').placeholder = '例如：维生素D、钙片等\n没有则留空';
+    }
+  } else if (val === 'prediabetes') {
+    if (diagnoseGroup) diagnoseGroup.style.display = 'block';
+    if (diagnoseLabel) diagnoseLabel.textContent = '发现血糖偏高时间';
+    if (medicationGroup) {
+      medicationGroup.querySelector('.form-label').textContent = '当前干预方式';
+      medicationGroup.querySelector('textarea').placeholder = '例如：饮食控制、运动干预\n二甲双胍（如医生开具）';
+    }
+  } else if (val) {
+    if (diagnoseGroup) diagnoseGroup.style.display = 'block';
+    if (diagnoseLabel) diagnoseLabel.textContent = '确诊时间';
+    if (medicationGroup) {
+      medicationGroup.querySelector('.form-label').textContent = '当前用药方案';
+      medicationGroup.querySelector('textarea').placeholder = '例如：二甲双胍 500mg 每日两次\n胰岛素：诺和锐 三餐前各10单位';
+    }
+  }
+}
+
+function saveProfile() {
+  const nickname = document.getElementById('fNickname').value.trim();
+  const gender = document.getElementById('fGender').value;
+  const birth = document.getElementById('fBirth').value;
+  const height = document.getElementById('fHeight').value;
+  const weight = document.getElementById('fWeight').value;
+  const diabetesType = document.getElementById('fDiabetesType').value;
+  if (!nickname) { showToast('请输入昵称'); return; }
+  if (!gender) { showToast('请选择性别'); return; }
+  if (!birth) { showToast('请选择出生日期'); return; }
+  if (!height) { showToast('请输入身高'); return; }
+  if (!weight) { showToast('请输入体重'); return; }
+  if (!diabetesType) { showToast('请选择糖尿病类型'); return; }
+  const diagnoseDate = (diabetesType === 'none') ? '' : document.getElementById('fDiagnoseDate').value;
+  const medication = document.getElementById('fMedication').value.trim();
+  const familyHistory = document.getElementById('fFamilyHistory').value;
+  const allergy = document.getElementById('fAllergy').value.trim();
+  const otherDisease = document.getElementById('fOtherDisease').value.trim();
+  const complications = [];
+  document.querySelectorAll('#complicationGroup input:checked').forEach(cb => complications.push(cb.value));
+  profile = {
+    phone: currentUser.phone, nickname, gender, birthDate: birth,
+    heightCm: parseFloat(height), weightKg: parseFloat(weight),
+    diabetesType, diagnoseDate, medication,
+    complications: complications.length ? complications.join('、') : '无',
+    familyHistory, allergy: allergy || '无', otherDisease: otherDisease || '无',
+    createdAt: new Date().toISOString()
+  };
+  localStorage.setItem('user_profile', JSON.stringify(profile));
+  localStorage.setItem('user_profile_' + currentUser.phone, JSON.stringify(profile));
+  // 同步账号信息到列表
+  let accs = getAllAccounts();
+  const idx = accs.findIndex(a => a.phone === currentUser.phone);
+  if (idx >= 0) { accs[idx].nickname = nickname; accs[idx].hasProfile = true; saveAllAccounts(accs); }
+  if (typeof syncToAdminStore === 'function') syncToAdminStore();
+  showToast('✅ 档案已保存');
+  enterApp();
+}
+
+function skipProfile() { enterApp(); }
+
+function enterApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('profileScreen').classList.remove('active');
+  document.getElementById('appContainer').classList.add('active');
+  updateSteps(3);
+  if (profile && profile.nickname) document.getElementById('headerUserName').textContent = '👤 ' + profile.nickname;
+  refreshHome();
+}
+
+// ===== 页面切换 =====
+function switchPage(name) {
+  if (name === 'admin') { openAdminPage(); return; }
+  document.getElementById('page-admin').style.display = 'none';
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.tab-item').forEach((t, i) => {
+    t.classList.remove('active');
+    if ((name === 'home' && i === 0) || (name === 'record' && i === 1) || (name === 'ai' && i === 2) || (name === 'profile' && i === 3)) t.classList.add('active');
+  });
+  if (name === 'home') refreshHome();
+  if (name === 'record') renderHistory();
+  if (name === 'profile') renderProfile();
+}
+
+// ===== 血糖记录 =====
+let selectedSlot = '';
+document.getElementById('timeSlots').addEventListener('click', function(e) {
+  const slot = e.target.closest('.time-slot');
+  if (!slot) return;
+  document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+  slot.classList.add('selected');
+  selectedSlot = slot.dataset.value;
+});
+
+function saveRecord() {
+  const value = parseFloat(document.getElementById('glucoseInput').value);
+  const note = document.getElementById('glucoseNote').value.trim();
+  if (!selectedSlot) { showToast('请选择测量时点'); return; }
+  if (!value || value < 1 || value > 35) { showToast('请输入有效血糖值 (1-35)'); return; }
+  records.unshift({
+    id: Date.now(), valueMmolL: value, context: selectedSlot,
+    measuredAt: new Date().toISOString(), note: note,
+    userPhone: currentUser ? currentUser.phone : ''
+  });
+  localStorage.setItem('glucose_records', JSON.stringify(records));
+  // 同时保存到当前账号的专属key（数据隔离）
+  if (currentUser && currentUser.phone) {
+    localStorage.setItem('glucose_records_' + currentUser.phone, JSON.stringify(records));
+  }
+  const evalResult = evaluateGlucose(value, selectedSlot);
+  let msg = '✅ 记录已保存';
+  if (evalResult.level === 'severe_low' || evalResult.level === 'low') msg = '⚠️ 低血糖！立即补充15g快速碳水（葡萄糖片/果汁），15分钟后复测';
+  else if (evalResult.level === 'very_high' || evalResult.level === 'danger') msg = '⚠️ 血糖偏高，2小时后复测，持续>16.7请就医';
+  else if (evalResult.level === 'slightly_high') msg = '💡 ' + evalResult.text;
+  else if (evalResult.level === 'high') msg = '⚠️ ' + evalResult.text;
+  showToast(msg);
+  document.getElementById('glucoseInput').value = '';
+  document.getElementById('glucoseNote').value = '';
+  document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+  selectedSlot = '';
+  renderHistory();
+}
+
+// ===== 血糖评判函数（根据测量时点动态评判）=====
+// 参考：中国2型糖尿病防治指南2024 + ADA 2025 Standards of Care
+function evaluateGlucose(value, context) {
+  // 低血糖判断（所有时点统一）
+  if (value < 3.0) return { status: '严重低血糖', emoji: '🚨', color: '#C62828', text: '危险！需立即处理', badge: '低', badgeCls: 'badge-red', level: 'severe_low' };
+  if (value < 3.9) return { status: '低血糖', emoji: '⚠️', color: '#E65100', text: '偏低，需及时补充糖分', badge: '低', badgeCls: 'badge-red', level: 'low' };
+
+  // 根据测量时点分别评判
+  if (context === 'before_breakfast' || context === 'before_lunch' || context === 'before_dinner') {
+    // 空腹/餐前：正常 3.9-6.1，控制目标 4.4-7.0（中国指南2024）
+    if (value <= 6.1) return { status: '正常范围', emoji: '✅', color: '#2E7D32', text: '空腹血糖正常，继续保持！', badge: '正常', badgeCls: 'badge-green', level: 'normal' };
+    if (value <= 7.0) return { status: '空腹略高', emoji: '💡', color: '#F57F17', text: '稍高于理想值（目标≤7.0），注意饮食', badge: '稍高', badgeCls: 'badge-orange', level: 'slightly_high' };
+    if (value <= 10.0) return { status: '空腹偏高', emoji: '⚠️', color: '#E65100', text: '空腹血糖偏高，需要重视', badge: '高', badgeCls: 'badge-orange', level: 'high' };
+    if (value <= 13.9) return { status: '空腹过高', emoji: '🔶', color: '#D84315', text: '明显偏高，建议就医调整方案', badge: '过高', badgeCls: 'badge-red', level: 'very_high' };
+    return { status: '空腹极高', emoji: '🚨', color: '#C62828', text: '严重偏高，建议尽快就医', badge: '危险', badgeCls: 'badge-red', level: 'danger' };
+  }
+
+  if (context === 'after_breakfast' || context === 'after_lunch' || context === 'after_dinner') {
+    // 餐后：正常 ≤7.8，控制目标 <10.0（ADA + 中国指南2024）
+    if (value <= 7.8) return { status: '餐后正常', emoji: '✅', color: '#2E7D32', text: '餐后血糖控制得很好！', badge: '正常', badgeCls: 'badge-green', level: 'normal' };
+    if (value <= 10.0) return { status: '餐后略高', emoji: '💡', color: '#F57F17', text: '略高于目标（<10.0），注意调整饮食', badge: '稍高', badgeCls: 'badge-orange', level: 'slightly_high' };
+    if (value <= 13.9) return { status: '餐后偏高', emoji: '⚠️', color: '#E65100', text: '餐后血糖偏高，需减少碳水摄入', badge: '高', badgeCls: 'badge-orange', level: 'high' };
+    return { status: '餐后过高', emoji: '🚨', color: '#C62828', text: '餐后血糖很高，建议就医调整方案', badge: '过高', badgeCls: 'badge-red', level: 'very_high' };
+  }
+
+  if (context === 'bedtime') {
+    // 睡前：理想 5.6-7.8（防止夜间低血糖）
+    if (value <= 3.9) return { status: '睡前偏低', emoji: '⚠️', color: '#E65100', text: '偏低，睡前加餐防夜间低血糖', badge: '低', badgeCls: 'badge-red', level: 'low' };
+    if (value <= 7.8) return { status: '睡前正常', emoji: '✅', color: '#2E7D32', text: '睡前血糖正常，可安心入睡', badge: '正常', badgeCls: 'badge-green', level: 'normal' };
+    if (value <= 10.0) return { status: '睡前略高', emoji: '💡', color: '#F57F17', text: '略高，今夜多饮水，明早复测', badge: '稍高', badgeCls: 'badge-orange', level: 'slightly_high' };
+    if (value <= 13.9) return { status: '睡前偏高', emoji: '⚠️', color: '#E65100', text: '偏高，建议散步20分钟帮助降糖', badge: '高', badgeCls: 'badge-orange', level: 'high' };
+    return { status: '睡前过高', emoji: '🚨', color: '#C62828', text: '过高，建议就医', badge: '过高', badgeCls: 'badge-red', level: 'very_high' };
+  }
+
+  // 随机测量
+  if (value <= 7.8) return { status: '正常范围', emoji: '✅', color: '#2E7D32', text: '血糖正常，继续保持！', badge: '正常', badgeCls: 'badge-green', level: 'normal' };
+  if (value <= 11.1) return { status: '略偏高', emoji: '💡', color: '#F57F17', text: '略高，注意饮食和运动', badge: '稍高', badgeCls: 'badge-orange', level: 'slightly_high' };
+  if (value <= 13.9) return { status: '偏高', emoji: '⚠️', color: '#E65100', text: '偏高，建议做空腹+餐后2小时血糖对比', badge: '高', badgeCls: 'badge-orange', level: 'high' };
+  return { status: '过高', emoji: '🚨', color: '#C62828', text: '明显偏高，建议就医检查', badge: '过高', badgeCls: 'badge-red', level: 'very_high' };
+}
+
+// ===== 个性化报告生成核心逻辑 =====
+function generatePersonalizedReport(record) {
+  const v = record.valueMmolL;
+  const ctx = record.context;
+  const age = getAge();
+  const bmi = getBMI();
+  const dmType = profile ? profile.diabetesType : 'type2';
+  const complications = profile ? (profile.complications || '无') : '无';
+  const medication = profile ? (profile.medication || '') : '';
+  const nickname = profile ? profile.nickname : '你';
+  const otherDisease = profile ? (profile.otherDisease || '无') : '无';
+
+  // 1. 血糖状态评估（根据测量时点动态评判）
+  const gEval = evaluateGlucose(v, ctx);
+  const glucoseStatus = gEval.status, statusEmoji = gEval.emoji, statusColor = gEval.color, statusText = gEval.text;
+
+  // 2. 趋势分析（7天/30天统计 + HbA1c估算）
+  const allRecs = getUserRecords();
+  const recent7 = allRecs.filter(r => new Date(r.measuredAt) > new Date(Date.now() - 7*24*3600*1000));
+  const recent30 = allRecs.filter(r => new Date(r.measuredAt) > new Date(Date.now() - 30*24*3600*1000));
+  let trendData = null;
+  if (recent7.length >= 2) {
+    const vals7 = recent7.map(r => r.valueMmolL);
+    const avg7 = vals7.reduce((a,b) => a+b, 0) / vals7.length;
+    const max7 = Math.max(...vals7);
+    const min7 = Math.min(...vals7);
+    const inRange7 = vals7.filter(x => x >= 3.9 && x <= 10).length;
+    
+    const vals30 = recent30.length > 0 ? recent30.map(r => r.valueMmolL) : vals7;
+    const avg30 = vals30.reduce((a,b) => a+b, 0) / vals30.length;
+    
+    // 估算HbA1c（基于ADAG公式：eA1C = (平均血糖mg/dL + 46.7) / 28.7）
+    const avgMgDl = avg30 * 18.0182; // mmol/L转mg/dL
+    const estimatedA1C = (avgMgDl + 46.7) / 28.7;
+    
+    // 趋势判断
+    const firstHalf = vals7.slice(0, Math.floor(vals7.length/2));
+    const secondHalf = vals7.slice(Math.floor(vals7.length/2));
+    const avgFirst = firstHalf.reduce((a,b) => a+b, 0) / firstHalf.length;
+    const avgSecond = secondHalf.reduce((a,b) => a+b, 0) / secondHalf.length;
+    let trendDirection = 'stable';
+    if (avgSecond > avgFirst + 0.5) trendDirection = 'rising';
+    else if (avgSecond < avgFirst - 0.5) trendDirection = 'improving';
+    
+    trendData = {
+      avg7: avg7.toFixed(1), max7: max7.toFixed(1), min7: min7.toFixed(1),
+      inRangeRate: Math.round(inRange7/vals7.length*100), count7: vals7.length,
+      avg30: avg30.toFixed(1), count30: recent30.length,
+      estimatedA1C: estimatedA1C.toFixed(1),
+      trendDirection
+    };
+  }
+
+  // 3. 饮食建议
+  let dietTips = [];
+  const contextMap = {
+    'before_breakfast': '早餐前空腹', 'after_breakfast': '早餐后',
+    'before_lunch': '午餐前', 'after_lunch': '午餐后',
+    'before_dinner': '晚餐前', 'after_dinner': '晚餐后',
+    'bedtime': '睡前', 'random': '随机'
+  };
+  const ctxName = contextMap[ctx] || '';
+  
+  if (gEval.level === 'severe_low' || gEval.level === 'low') {
+    dietTips.push('🍬 立即补充15g快速碳水：葡萄糖片3-4片、或果汁150ml、或方糖3-4块');
+    dietTips.push('🍪 15分钟后复测，若仍低再补充一次，恢复后加吃饼干/面包等慢碳水');
+    dietTips.push('🥜 后续补充花生、坚果等含蛋白+脂肪的食物，延缓血糖下降');
+  } else if (gEval.level === 'normal') {
+    dietTips.push('🥗 继续保持均衡饮食，每餐主食控制在100-150g（约一拳大小）');
+    dietTips.push('🥬 增加绿叶蔬菜（每天500g+），蔬菜→蛋白→主食的进食顺序有助控糖');
+    dietTips.push('🐟 优质蛋白不可少：每天一个鸡蛋、一杯牛奶、100-150g鱼/禽肉');
+  } else if (gEval.level === 'slightly_high') {
+    dietTips.push('🍚 下一餐主食减少1/3，用杂粮（燕麦、荞麦、糙米）替代部分白米');
+    dietTips.push('🥒 增加膳食纤维：凉拌黄瓜、清炒西兰花、木耳炒山药等');
+    dietTips.push('🚫 暂时避免高GI食物：白粥、糯米、甜点、含糖饮料');
+  } else {
+    dietTips.push('🚫 立即暂停碳水摄入，只喝温水（300-500ml）');
+    dietTips.push('🥬 下一餐以蔬菜+蛋白为主，主食减半或暂时不吃');
+    dietTips.push('⚠️ 持续>13.9超过2小时不降，建议就医或联系医生调整用药');
+  }
+  
+  // 根据测量时点补充（只在偏高时给出针对性建议）
+  if (ctx === 'before_breakfast' && (gEval.level === 'slightly_high' || gEval.level === 'high' || gEval.level === 'very_high')) dietTips.push('🌅 空腹血糖偏高，建议晚餐提前至18:00前，睡前不吃夜宵');
+  else if (ctx === 'after_breakfast' && (gEval.level === 'slightly_high' || gEval.level === 'high' || gEval.level === 'very_high')) dietTips.push('🍳 早餐后血糖高，早餐尝试：鸡蛋+全麦面包+牛奶，避免白粥/油条');
+  else if (ctx === 'after_lunch' && (gEval.level === 'slightly_high' || gEval.level === 'high' || gEval.level === 'very_high')) dietTips.push('🍱 午餐后血糖高，主食改杂粮饭，先吃菜再吃饭');
+  else if (ctx === 'after_dinner' && (gEval.level === 'slightly_high' || gEval.level === 'high' || gEval.level === 'very_high')) dietTips.push('🍽️ 晚餐后血糖高，晚餐减量并提前，饭后散步20分钟');
+  else if (ctx === 'bedtime' && (gEval.level === 'slightly_high' || gEval.level === 'high' || gEval.level === 'very_high')) dietTips.push('🌙 睡前血糖偏高，今夜多饮水，明早空腹复测');
+  else if (ctx === 'bedtime' && (gEval.level === 'low' || gEval.level === 'severe_low')) dietTips.push('🌙 睡前血糖偏低，加餐：半杯牛奶+2块全麦饼干，防夜间低血糖');
+  
+  // 根据BMI调整
+  if (bmi >= 28) dietTips.push('⚖️ BMI偏高，每日总热量建议1200-1500kcal，减少油脂摄入');
+  else if (bmi >= 24) dietTips.push('⚖️ 体重略超，每餐七八分饱，晚餐尤其要控制');
+  else if (bmi < 18.5) dietTips.push('📈 体重偏轻，不要过度节食，保证每天1600kcal以上');
+
+  // 4. 运动处方（基于FITT原则 + 专业指南）
+  let exerciseTips = [];
+  let weeklyPlan = null;
+  const isElderly = age > 60;
+  const isYoung = age < 40;
+  const hasRetinopathy = complications.includes('视网膜病变');
+  const hasNephropathy = complications.includes('肾病');
+  const hasNeuropathy = complications.includes('神经病变');
+  const hasCardiovascular = complications.includes('心血管疾病');
+  const hasFoot = complications.includes('糖尿病足');
+  const hasHypertension = otherDisease.includes('高血压');
+  
+  // 运动前安全评估
+  if (v < 3.9) {
+    exerciseTips.push('🚫 当前低血糖，禁止运动！先纠正低血糖（补充15g快速碳水），待血糖恢复至5.6以上再考虑');
+  } else if (v > 16.7) {
+    exerciseTips.push('🚫 血糖过高（>16.7），暂不宜运动，可能存在酮症风险，先通过药物/饮食控制');
+  } else if (v >= 5.0 && v <= 13.9) {
+    // 运动安全范围：5.0-13.9 mmol/L
+    const targetHR = Math.round((220 - age) * 0.64) + '-' + Math.round((220 - age) * 0.76);
+    
+    // 根据年龄和并发症生成个性化运动方案
+    if (isElderly) {
+      // 老年患者方案
+      exerciseTips.push('🚶 首选中等强度有氧：快走、太极拳、八段锦，每次20-30分钟，运动时心率控制在' + targetHR + '次/分');
+      exerciseTips.push('📅 频率：每周≥5天，每天坚持，不要连续2天不运动（ADA指南推荐）');
+      if (!hasFoot && !hasNeuropathy) {
+        exerciseTips.push('🧘 八段锦/太极拳：每天15-20分钟，研究证实可改善平衡能力和血糖控制');
+        exerciseTips.push('🪑 简单抗阻：用矿泉水瓶做哑铃弯举，坐姿抬腿，每个动作10-15次×2组，隔天一次');
+      }
+      if (hasFoot || hasNeuropathy) {
+        exerciseTips.push('🦶 足部保护：穿减震软底运动鞋+棉袜，运动后检查足底有无破损');
+        exerciseTips.push('🪑 优先非负重运动：游泳、水中行走、坐姿上肢训练，减少足部磨损风险');
+      }
+      if (hasRetinopathy) {
+        exerciseTips.push('⚠️ 视网膜病变：避免低头弯腰、跳跃、举重物等增加眼压的动作');
+        exerciseTips.push('🚶 选择：平地快走、固定自行车、太极（简化版），避免剧烈晃动');
+      }
+      exerciseTips.push('⏱️ 运动结构：热身5分钟（活动手腕脚踝）→ 正式运动20分钟 → 放松拉伸5分钟');
+    } else if (isYoung) {
+      // 年轻患者方案
+      exerciseTips.push('🏃 有氧运动：快走/慢跑/游泳/骑行，每次30-45分钟，心率控制在' + targetHR + '次/分');
+      exerciseTips.push('🏋️ 抗阻训练：每周3次（深蹲、俯卧撑、弹力带划船），每个动作3组×12次，可增加肌肉量提高基础代谢');
+      if (!hasRetinopathy) {
+        exerciseTips.push('⚡ HIIT训练（可选）：30秒高强度+60秒低强度，交替10组，每周1-2次，20分钟≈40分钟常规有氧');
+      }
+      exerciseTips.push('📅 每周计划：周一三五有氧30分钟，周二四六抗阻20分钟，周日休息或轻度拉伸');
+      if (bmi >= 28) {
+        exerciseTips.push('⚖️ 减脂优先：有氧+抗阻结合效果最佳，每增加1kg肌肉每天多消耗约100kcal');
+      }
+    } else {
+      // 中年患者方案
+      exerciseTips.push('🏃 有氧运动：快走/慢跑/骑车/游泳，每周≥150分钟（分摊到5天，每次30分钟）');
+      exerciseTips.push('🏋️ 抗阻训练：每周2-3次（弹力带、深蹲、靠墙静蹲），训练大肌群，每组10-15次×2-3组');
+      exerciseTips.push('📅 ADA推荐：有氧+抗阻结合效果优于单一运动，可同时改善血糖和胰岛素敏感性');
+      if (hasRetinopathy) {
+        exerciseTips.push('⚠️ 视网膜病变：避免剧烈运动和憋气动作，选快走、椭圆机等低冲击运动');
+      }
+      if (bmi >= 28) {
+        exerciseTips.push('⚖️ 每周减重目标0.5-1kg，运动+饮食双管齐下，5%体重下降即可显著改善血糖');
+      }
+    }
+    
+    // 并发症特殊运动建议
+    if (hasCardiovascular) {
+      exerciseTips.push('❤️ 心血管病：运动前测血压，心率不超过' + Math.round(170-age) + '次/分，避免憋气和突然发力');
+      if (hasHypertension) exerciseTips.push('🩸 合并高血压：避免举重、引体向上等需憋气的动作，优选游泳、步行等大肌群有氧');
+    }
+    if (hasNephropathy) {
+      exerciseTips.push('🫘 肾病：低强度有氧为主（平地步行、固定自行车），每次20-30分钟，避免脱水，运动前后补水');
+    }
+    
+    // 通用安全提醒
+    exerciseTips.push('💧 随身携带糖果/葡萄糖片和水杯，运动前后测血糖，运动后血糖<3.9补充15g碳水');
+    exerciseTips.push('⏰ 最佳运动时间：餐后1-2小时（此时血糖最高，降糖效果好且不易低血糖）');
+    
+    // 生成每周运动计划表
+    weeklyPlan = generateWeeklyPlan(isElderly, isYoung, hasRetinopathy, hasFoot, hasNeuropathy, hasCardiovascular, hasNephropathy, bmi);
+  } else {
+    exerciseTips.push('💡 当前血糖<5.0，运动前建议补充15g碳水（如1片全麦面包），防止运动低血糖');
+  }
+
+  // 5. 用药提醒
+  let medTips = [];
+  if (medication && medication.length > 0) {
+    if (medication.includes('二甲双胍')) {
+      medTips.push('💊 二甲双胍建议随餐或餐后服用，减少胃肠不适');
+    }
+    if (medication.includes('胰岛素') || medication.includes('诺和') || medication.includes('优泌林')) {
+      medTips.push('💉 注射胰岛素后30分钟内务必进食，防止低血糖');
+      if (v < 5) medTips.push('⚠️ 当前血糖偏低，如已注射胰岛素请立即进食');
+      medTips.push('🏃 使用胰岛素者运动前需减少30-50%餐前剂量（运动前90分钟内），并携带糖果');
+    }
+    if (medication.includes('格列') || medication.includes('磺脲')) {
+      medTips.push('💊 磺脲类药物有低血糖风险，需规律进食；运动时避开药物作用高峰时段');
+    }
+    if (medication.includes('达格列净') || medication.includes('恩格列净') || medication.includes('SGLT')) {
+      medTips.push('💊 SGLT2抑制剂：注意多饮水防脱水，警惕酮症酸中毒（恶心、呕吐、腹痛时立即就医）');
+    }
+  }
+  
+  // 6. 糖尿病类型特殊提醒
+  let typeTips = [];
+  if (dmType === 'none') {
+    if (gEval.level === 'normal') {
+      typeTips.push('📌 你的' + gEval.status + '！说明生活方式很健康，继续保持良好习惯');
+    } else if (gEval.level === 'slightly_high') {
+      typeTips.push('📌 ' + gEval.status + '，建议关注饮食结构，减少精制碳水和高糖食物');
+      typeTips.push('💡 定期监测（每周1-2次），警惕发展为糖尿病前期');
+    } else {
+      typeTips.push('📌 ' + gEval.status + '，建议到医院做糖耐量试验（OGTT）和糖化血红蛋白检查');
+      typeTips.push('💡 即使未确诊糖尿病，持续高血糖也需重视，及时调整生活方式');
+    }
+    if (otherDisease !== '无') {
+      typeTips.push('📋 你有其他病史（' + otherDisease + '），血糖监测同样重要，请遵医嘱');
+    }
+  } else if (dmType === 'prediabetes') {
+    typeTips.push('📌 你处于糖尿病前期——逆转的黄金窗口期！通过饮食+运动，50-70%概率可逆转');
+    if (gEval.level === 'normal') typeTips.push('✅ 当前血糖控制不错，继续保持，争取逆转！');
+    else typeTips.push('💡 每次偏高都在提醒你：需要更严格控制碳水，坚持运动');
+    typeTips.push('🎯 目标：3-6个月内HbA1c降到5.7%以下（中国糖尿病防治指南2024推荐）');
+  } else if (dmType === 'type1') {
+    typeTips.push('📌 1型糖尿病需依赖胰岛素治疗，不可擅自停药，注意碳水计数法');
+    typeTips.push('💉 运动管理更复杂：运动前/中/后需密切监测血糖（4-24小时），注意夜间低血糖风险');
+  } else if (dmType === 'gestational') {
+    typeTips.push('🤰 妊娠期血糖需更严格管理：空腹<5.3、餐后2h<6.7为达标');
+    typeTips.push('👶 运动以散步、孕妇瑜伽为主，心率<140次/分，避免腹部挤压');
+  }
+  
+  // 7. 风险提示
+  let riskTips = [];
+  if (trendData) {
+    if (trendData.trendDirection === 'rising') {
+      riskTips.push('📈 近7天血糖呈上升趋势，建议回顾近期饮食和运动变化，必要时就医调整方案');
+    }
+    if (trendData.inRangeRate < 50) {
+      riskTips.push('⚠️ 近7天达标率仅' + trendData.inRangeRate + '%（目标>70%），需加强自我管理');
+    }
+    if (parseFloat(trendData.estimatedA1C) >= 7.0 && dmType !== 'none') {
+      riskTips.push('🔴 估算HbA1c≥' + trendData.estimatedA1C + '%，高于控制目标（<7%），建议尽快就医调整治疗方案');
+    } else if (parseFloat(trendData.estimatedA1C) >= 6.5 && dmType !== 'none') {
+      riskTips.push('🟡 估算HbA1c偏高（' + trendData.estimatedA1C + '%），距离目标还有差距，加油！');
+    }
+  }
+  if (v < 3.0 || v > 16.7) {
+    riskTips.push('🚨 本次血糖值超出安全范围，请尽快联系医生或前往急诊');
+  }
+
+  // 8. 鼓励语
+  let encourage = '';
+  const recentRecs = recent7;
+  const inRangeCount = recentRecs.filter(r => r.valueMmolL >= 3.9 && r.valueMmolL <= 10).length;
+  const inRangeRate = recentRecs.length > 0 ? Math.round(inRangeCount / recentRecs.length * 100) : 0;
+  const isNonDiabetic = (dmType === 'none');
+  
+  if (gEval.level === 'normal') {
+    if (isNonDiabetic) encourage = '🌟 ' + nickname + '，' + gEval.status + '，身体状态很好！保持健康习惯，定期监测就安心。';
+    else encourage = '🌟 ' + nickname + '，这次' + gEval.status + '，控制得非常棒！你做得很好，继续保持管理节奏。';
+    if (inRangeRate >= 80 && recentRecs.length >= 3) encourage += ' 最近一周达标率' + inRangeRate + '%，进步很大！';
+  } else if (gEval.level === 'slightly_high') {
+    if (isNonDiabetic) encourage = '💪 ' + nickname + '，血糖略高了一点，可能与最近饮食有关。调整一下就好！';
+    else encourage = '💪 ' + nickname + '，虽然这次' + gEval.status + '，但不用太担心。按建议调整后复测，下次会更好！';
+    if (recentRecs.length >= 2) {
+      const prev = recentRecs[1];
+      if (prev && v < prev.valueMmolL) encourage += ' 比上次好了，继续保持！';
+    }
+  } else if (gEval.level === 'high' || gEval.level === 'very_high' || gEval.level === 'danger') {
+    if (isNonDiabetic) encourage = '🤗 ' + nickname + '，血糖明显偏高，建议关注最近饮食和作息。多次偏高最好去检查。';
+    else encourage = '🤗 ' + nickname + '，这次' + gEval.status + '，别灰心，偶尔波动正常。认真参考建议，下次会更好！';
+  } else if (gEval.level === 'low' || gEval.level === 'severe_low') {
+    encourage = '❤️ ' + nickname + '，低血糖很危险，请先按建议处理。处理好后记得记录，方便找出原因。';
+  }
+
+  return {
+    glucoseStatus, statusEmoji, statusColor, statusText,
+    dietTips: dietTips.slice(0, 6),
+    exerciseTips: exerciseTips.slice(0, 7),
+    weeklyPlan, trendData,
+    medTips, typeTips, riskTips,
+    encourage, ctxName, v
+  };
+}
+
+// 生成个性化每周运动计划表
+function generateWeeklyPlan(isElderly, isYoung, hasRetinopathy, hasFoot, hasNeuropathy, hasCardiovascular, hasNephropathy, bmi) {
+  let plan = { days: [] };
+  const dayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+  
+  if (isElderly) {
+    plan.title = '🧓 适合你的每周运动方案';
+    plan.subtitle = '以安全舒缓为主，循序渐进';
+    plan.days = [
+      { day: '周一', type: '有氧', content: '平地快走20分钟 + 拉伸5分钟', icon: '🚶' },
+      { day: '周二', type: '柔韧', content: '太极拳/八段锦15-20分钟', icon: '🧘' },
+      { day: '周三', type: '有氧', content: '慢走20分钟 + 坐姿抬腿10次×2组', icon: '🚶' },
+      { day: '周四', type: '休息', content: '轻度活动（家务散步即可）', icon: '😌' },
+      { day: '周五', type: '有氧', content: '平地快走25分钟', icon: '🚶' },
+      { day: '周六', type: '综合', content: '太极拳20分钟 + 矿泉水瓶哑铃弯举10次×2组', icon: '🧘' },
+      { day: '周日', type: '休息', content: '散步放松，为下周蓄力', icon: '😌' }
+    ];
+  } else if (isYoung) {
+    plan.title = '💪 适合你的每周运动方案';
+    plan.subtitle = '有氧+抗阻+HIIT，全面提升';
+    plan.days = [
+      { day: '周一', type: '有氧', content: '慢跑/游泳35分钟', icon: '🏃' },
+      { day: '周二', type: '抗阻', content: '深蹲3×12 + 俯卧撑3×10 + 弹力带划船3×12', icon: '🏋️' },
+      { day: '周三', type: '有氧', content: '骑行/椭圆机40分钟', icon: '🚴' },
+      { day: '周四', type: 'HIIT', content: '30秒冲刺+60秒慢走×10组（20分钟）', icon: '⚡' },
+      { day: '周五', type: '抗阻', content: '硬拉3×10 + 卧推3×12 + 平板支撑3×30秒', icon: '🏋️' },
+      { day: '周六', type: '有氧', content: '户外跑步/打球45分钟', icon: '🏃' },
+      { day: '周日', type: '恢复', content: '瑜伽拉伸20分钟 / 轻度散步', icon: '🧘' }
+    ];
+  } else {
+    plan.title = '📋 适合你的每周运动方案';
+    plan.subtitle = '有氧为主，搭配抗阻，稳扎稳打';
+    if (hasRetinopathy) {
+      plan.days = [
+        { day: '周一', type: '有氧', content: '快走30分钟（低冲击）', icon: '🚶' },
+        { day: '周二', type: '抗阻', content: '弹力带上肢训练20分钟（坐姿）', icon: '🏋️' },
+        { day: '周三', type: '有氧', content: '固定自行车30分钟', icon: '🚴' },
+        { day: '周四', type: '休息', content: '轻度散步', icon: '😌' },
+        { day: '周五', type: '有氧', content: '快走30分钟 + 拉伸', icon: '🚶' },
+        { day: '周六', type: '综合', content: '坐姿哑铃20分钟 + 散步20分钟', icon: '🏋️' },
+        { day: '周日', type: '休息', content: '放松恢复', icon: '😌' }
+      ];
+    } else {
+      plan.days = [
+        { day: '周一', type: '有氧', content: '快走/慢跑30分钟', icon: '🏃' },
+        { day: '周二', type: '抗阻', content: '深蹲+俯卧撑+弹力带，每个动作3组×12次', icon: '🏋️' },
+        { day: '周三', type: '有氧', content: '游泳/骑行35分钟', icon: '🏊' },
+        { day: '周四', type: '休息', content: '轻度活动（散步即可）', icon: '😌' },
+        { day: '周五', type: '有氧', content: '快走/跳操30分钟', icon: '🏃' },
+        { day: '周六', type: '抗阻', content: '靠墙静蹲+哑铃弯举+平板支撑', icon: '🏋️' },
+        { day: '周日', type: '恢复', content: '瑜伽拉伸20分钟 / 散步', icon: '🧘' }
+      ];
+    }
+  }
+  return plan;
+}
+
+function renderReportHTML(report) {
+  let html = '<div class="report-container" id="report-' + Date.now() + '">';
+  
+  // 血糖评估
+  html += '<div class="report-glucose-eval">';
+  html += '<div style="font-size:12px;color:var(--hint);margin-bottom:4px;">📊 本次血糖评估 · ' + report.ctxName + '</div>';
+  html += '<div class="report-glucose-value" style="color:' + report.statusColor + '">' + report.v.toFixed(1) + ' <span style="font-size:14px;color:var(--hint)">mmol/L</span></div>';
+  html += '<div class="report-glucose-status" style="color:' + report.statusColor + '">' + report.statusEmoji + ' ' + report.glucoseStatus + ' · ' + report.statusText + '</div>';
+  html += '</div>';
+  
+  // 趋势分析
+  if (report.trendData) {
+    const td = report.trendData;
+    const trendIcon = td.trendDirection === 'rising' ? '📈↑' : td.trendDirection === 'improving' ? '📉↓' : '➡️→';
+    const trendText = td.trendDirection === 'rising' ? '上升趋势' : td.trendDirection === 'improving' ? '改善趋势' : '基本稳定';
+    const trendColor = td.trendDirection === 'rising' ? '#E65100' : td.trendDirection === 'improving' ? '#2E7D32' : '#1565C0';
+    html += '<div class="report-section"><div class="report-section-title">📈 趋势分析（近7天）</div>';
+    html += '<div class="report-trend-grid">';
+    html += '<div class="trend-item"><div class="trend-value">' + td.avg7 + '</div><div class="trend-label">7日均值</div></div>';
+    html += '<div class="trend-item"><div class="trend-value">' + td.avg30 + '</div><div class="trend-label">30日均值</div></div>';
+    html += '<div class="trend-item"><div class="trend-value" style="color:' + trendColor + '">' + trendIcon + '</div><div class="trend-label">' + trendText + '</div></div>';
+    html += '<div class="trend-item"><div class="trend-value" style="color:' + (td.inRangeRate >= 70 ? '#2E7D32' : '#E65100') + '">' + td.inRangeRate + '%</div><div class="trend-label">达标率</div></div>';
+    html += '</div>';
+    html += '<div class="report-trend-grid" style="margin-top:6px;">';
+    html += '<div class="trend-item"><div class="trend-value">' + td.max7 + '</div><div class="trend-label">最高值</div></div>';
+    html += '<div class="trend-item"><div class="trend-value">' + td.min7 + '</div><div class="trend-label">最低值</div></div>';
+    html += '<div class="trend-item"><div class="trend-value">' + td.count7 + '</div><div class="trend-label">测量次数</div></div>';
+    html += '<div class="trend-item"><div class="trend-value" style="color:#6A1B9A">' + td.estimatedA1C + '%</div><div class="trend-label">估算HbA1c</div></div>';
+    html += '</div>';
+    html += '<div style="font-size:11px;color:var(--hint);margin-top:6px;">💡 HbA1c基于近30天数据估算（ADAG公式），仅供参考，不作为诊断依据</div>';
+    html += '</div>';
+  }
+  
+  // 风险提示
+  if (report.riskTips && report.riskTips.length > 0) {
+    html += '<div class="report-section" style="border-left:3px solid #F44336;"><div class="report-section-title">🔔 风险提示</div>';
+    report.riskTips.forEach(tip => { html += '<div class="report-diet-item" style="color:#C62828;">' + tip + '</div>'; });
+    html += '</div>';
+  }
+  
+  // 饮食建议
+  if (report.dietTips.length > 0) {
+    html += '<div class="report-section"><div class="report-section-title">🍽️ 饮食建议</div>';
+    report.dietTips.forEach(tip => { html += '<div class="report-diet-item">' + tip + '</div>'; });
+    html += '</div>';
+  }
+  
+  // 运动处方
+  if (report.exerciseTips.length > 0) {
+    html += '<div class="report-section"><div class="report-section-title">🏃 运动处方</div>';
+    report.exerciseTips.forEach(tip => { html += '<div class="report-exercise-item">' + tip + '</div>'; });
+    html += '</div>';
+  }
+  
+  // 每周运动计划表
+  if (report.weeklyPlan && report.weeklyPlan.days.length > 0) {
+    const wp = report.weeklyPlan;
+    html += '<div class="report-section"><div class="report-section-title">' + wp.title + '</div>';
+    html += '<div style="font-size:12px;color:var(--hint);margin-bottom:8px;">' + wp.subtitle + '</div>';
+    html += '<div class="weekly-plan-table">';
+    wp.days.forEach(d => {
+      const isRest = d.type === '休息' || d.type === '恢复';
+      html += '<div class="plan-row' + (isRest ? ' rest' : '') + '">';
+      html += '<div class="plan-day">' + d.icon + ' ' + d.day + '</div>';
+      html += '<div class="plan-type">' + d.type + '</div>';
+      html += '<div class="plan-content">' + d.content + '</div>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  }
+  
+  // 用药提醒
+  if (report.medTips.length > 0) {
+    html += '<div class="report-section"><div class="report-section-title">💊 用药提醒</div>';
+    report.medTips.forEach(tip => { html += '<div class="report-diet-item">' + tip + '</div>'; });
+    html += '</div>';
+  }
+  
+  // 类型特殊提醒
+  if (report.typeTips.length > 0) {
+    html += '<div class="report-section"><div class="report-section-title">📌 特别提醒</div>';
+    report.typeTips.forEach(tip => { html += '<div class="report-diet-item" style="color:#1565C0;">' + tip + '</div>'; });
+    html += '</div>';
+  }
+  
+  // 温馨提示
+  html += '<div class="report-tip encourage">' + report.encourage + '</div>';
+  html += '<div style="font-size:10px;color:var(--hint);text-align:center;margin-top:8px;">以上建议基于ADA/中国糖尿病防治指南2024，仅供健康管理参考</div>';
+  html += '<button class="report-close-btn" onclick="closeReport(this)">收起报告 ▲</button>';
+  html += '</div>';
+  
+  return html;
+}
+
+function toggleReport(recordId, element) {
+  // 精准查找当前记录紧邻的报告容器（下一个兄弟元素）
+  const reportEl = element.nextElementSibling;
+  if (reportEl && reportEl.classList.contains('report-container')) {
+    if (reportEl.classList.contains('open')) {
+      reportEl.classList.remove('open');
+      element.classList.remove('expanded');
+      // 动画结束后移除DOM
+      setTimeout(() => { if (!reportEl.classList.contains('open')) reportEl.remove(); }, 500);
+    } else {
+      reportEl.classList.add('open');
+      element.classList.add('expanded');
+    }
+    return;
+  }
+  
+  // 如果没有现成的报告，生成一个
+  const record = records.find(r => r.id === recordId);
+  if (!record) return;
+  
+  const report = generatePersonalizedReport(record);
+  const reportHTML = renderReportHTML(report);
+  element.insertAdjacentHTML('afterend', reportHTML);
+  
+  // 延迟添加open class以触发动画
+  setTimeout(() => {
+    const newReport = element.nextElementSibling;
+    if (newReport && newReport.classList.contains('report-container')) {
+      newReport.classList.add('open');
+      element.classList.add('expanded');
+    }
+  }, 50);
+}
+
+function closeReport(btn) {
+  const container = btn.closest('.report-container');
+  if (container) {
+    container.classList.remove('open');
+    const recordItem = container.previousElementSibling;
+    if (recordItem) recordItem.classList.remove('expanded');
+  }
+}
+
+// ===== 历史记录渲染（15天，点击生成报告） =====
+function renderHistory() {
+  cleanOldRecords();
+  const container = document.getElementById('historyRecords');
+  const userRecords = getRecordsInDays(15);
+  if (userRecords.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><div class="text">暂无记录</div></div>';
+    return;
+  }
+  const cm = { before_breakfast:'🌅 早餐前', after_breakfast:'🍳 早餐后', before_lunch:'☀️ 午餐前', after_lunch:'🍱 午餐后', before_dinner:'🌆 晚餐前', after_dinner:'🍽️ 晚餐后', bedtime:'🌙 睡前', random:'🔔 随机' };
+  let html = '';
+  userRecords.forEach(r => {
+    const v = r.valueMmolL;
+    const ev = evaluateGlucose(v, r.context);
+    const color = ev.color;
+    const badge = '<span class="badge ' + ev.badgeCls + '">' + ev.badge + '</span>';
+    const t = new Date(r.measuredAt);
+    const ts = (t.getMonth()+1)+'/'+t.getDate()+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+    html += '<div class="record-item" onclick="toggleReport(' + r.id + ', this)"><div><div style="font-size:14px">' + (cm[r.context]||'') + ' ' + badge + '</div><div class="record-time">' + ts + (r.note ? ' · ' + r.note : '') + '</div><div class="record-click-hint">📊 点击查看个性化建议</div></div><div class="record-value" style="color:' + color + '">' + v.toFixed(1) + '</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+// ===== 首页 =====
+function refreshHome() {
+  const userRecords = getUserRecords();
+  const recentRecords = getRecordsInDays(3);
+  const latest = userRecords[0];
+  if (latest) {
+    document.getElementById('currentGlucose').textContent = latest.valueMmolL.toFixed(1);
+    const v = latest.valueMmolL;
+    const el = document.getElementById('glucoseStatus');
+    const homeEval = evaluateGlucose(v, latest.context);
+    let text, cls;
+    if (homeEval.level === 'severe_low' || homeEval.level === 'low') { text = '🚨 低血糖'; cls = 'status-danger'; }
+    else if (homeEval.level === 'normal') { text = '✅ ' + homeEval.status; cls = 'status-normal'; }
+    else if (homeEval.level === 'slightly_high') { text = '💡 ' + homeEval.status; cls = 'status-high'; }
+    else if (homeEval.level === 'high') { text = '⚠️ ' + homeEval.status; cls = 'status-high'; }
+    else { text = '🚨 ' + homeEval.status; cls = 'status-danger'; }
+    el.textContent = text; el.className = 'glucose-status ' + cls;
+  }
+  
+  let alerts = '';
+  if (latest) {
+    if (latest.valueMmolL < 3.9) alerts += '<div class="alert-box alert-danger">🚨 最近血糖偏低（' + latest.valueMmolL.toFixed(1) + '），请立即补充糖分</div>';
+    if (latest.valueMmolL > 13.9) alerts += '<div class="alert-box alert-warn">⚠️ 最近血糖偏高，建议减少碳水，适量运动</div>';
+  }
+  const today = userRecords.filter(r => new Date(r.measuredAt).toDateString() === new Date().toDateString());
+  if (today.length === 0) alerts += '<div class="alert-box alert-info">💡 今天还没测量血糖，记得按时监测</div>';
+  document.getElementById('alertArea').innerHTML = alerts;
+  
+  const weekRecs = getRecordsInDays(7);
+  if (weekRecs.length > 0) {
+    const avg = weekRecs.reduce((s,r) => s+r.valueMmolL, 0) / weekRecs.length;
+    document.getElementById('statAvg').textContent = avg.toFixed(1);
+    document.getElementById('statCount').textContent = weekRecs.length;
+    const inRange = weekRecs.filter(r => r.valueMmolL >= 3.9 && r.valueMmolL <= 10).length;
+    document.getElementById('statInRange').textContent = Math.round(inRange/weekRecs.length*100)+'%';
+  } else {
+    document.getElementById('statAvg').textContent = '--';
+    document.getElementById('statCount').textContent = '0';
+    document.getElementById('statInRange').textContent = '--';
+  }
+  
+  // 最近记录（3天内，点击生成报告）
+  const rc = document.getElementById('recentRecords');
+  if (recentRecords.length === 0) {
+    rc.innerHTML = '<div class="empty-state"><div class="icon">📭</div><div class="text">近3天还没有记录，去记录第一条血糖吧</div></div>';
+  } else {
+    const cm = { before_breakfast:'早餐前', after_breakfast:'早餐后', before_lunch:'午餐前', after_lunch:'午餐后', before_dinner:'晚餐前', after_dinner:'晚餐后', bedtime:'睡前', random:'随机' };
+    let h = '';
+    recentRecords.forEach(r => {
+      const v = r.valueMmolL;
+      const rev = evaluateGlucose(v, r.context);
+      const c = rev.color;
+      const t = new Date(r.measuredAt);
+      h += '<div class="record-item" onclick="toggleReport(' + r.id + ', this)"><div><div style="font-size:14px">' + (cm[r.context]||'') + '</div><div class="record-time">' + (t.getMonth()+1) + '/' + t.getDate() + ' ' + String(t.getHours()).padStart(2,'0') + ':' + String(t.getMinutes()).padStart(2,'0') + '</div><div class="record-click-hint">📊 点击查看个性化建议</div></div><div class="record-value" style="color:' + c + '">' + v.toFixed(1) + '</div></div>';
+    });
+    rc.innerHTML = h;
+  }
+  drawChart(userRecords);
+}
+
+function drawChart(userRecords) {
+  const canvas = document.getElementById('trendChart');
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width*2; canvas.height = rect.height*2; ctx.scale(2,2);
+  const w=rect.width, h=rect.height, pad={t:20,r:20,b:30,l:40}, cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
+  const days=[]; for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d);}
+  const avg=days.map(d=>{const rs=userRecords.filter(r=>new Date(r.measuredAt).toDateString()===d.toDateString());return rs.length?rs.reduce((s,r)=>s+r.valueMmolL,0)/rs.length:null;});
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle='#f0f0f0';ctx.lineWidth=.5;
+  for(let i=0;i<=4;i++){const y=pad.t+(ch/4)*i;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();}
+  ctx.fillStyle='#999';ctx.font='10px sans-serif';ctx.textAlign='right';
+  [20,15,10,5,0].forEach((v,i)=>ctx.fillText(v,pad.l-8,pad.t+(ch/4)*i+4));
+  const y10=pad.t+ch*(1-10/20),y4=pad.t+ch*(1-3.9/20);
+  ctx.fillStyle='rgba(76,175,80,.08)';ctx.fillRect(pad.l,y10,cw,y4-y10);
+  ctx.strokeStyle='rgba(76,175,80,.3)';ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(pad.l,y10);ctx.lineTo(w-pad.r,y10);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(pad.l,y4);ctx.lineTo(w-pad.r,y4);ctx.stroke();
+  ctx.setLineDash([]);
+  const pts=[];avg.forEach((v,i)=>{if(v===null)return;pts.push({x:pad.l+(cw/6)*i,y:pad.t+ch*(1-v/20),v});});
+  if(pts.length>1){ctx.beginPath();ctx.strokeStyle='#4CAF50';ctx.lineWidth=2;ctx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);ctx.stroke();}
+  pts.forEach(pt=>{ctx.beginPath();ctx.arc(pt.x,pt.y,4,0,Math.PI*2);ctx.fillStyle='#4CAF50';ctx.fill();ctx.fillStyle='#333';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText(pt.v.toFixed(1),pt.x,pt.y-10);});
+  ctx.fillStyle='#999';ctx.textAlign='center';
+  days.forEach((d,i)=>ctx.fillText((d.getMonth()+1)+'/'+d.getDate(),pad.l+(cw/6)*i,h-8));
+  if(!pts.length){ctx.fillStyle='#ccc';ctx.font='14px sans-serif';ctx.textAlign='center';ctx.fillText('记录血糖后显示趋势',w/2,h/2);}
+}
+
+// ===== AI医生（升级版） =====
+function sendChat() {
+  const inp = document.getElementById('chatInput');
+  const q = inp.value.trim();
+  if (!q) return;
+  inp.value = '';
+  askAI(q);
+}
+
+function askAI(question) {
+  const ca = document.getElementById('chatArea');
+  ca.innerHTML += '<div class="chat-msg user"><div class="chat-bubble">' + question + '</div></div>';
+  ca.scrollTop = ca.scrollHeight;
+  
+  // 显示加载状态
+  const loadingId = 'loading-' + Date.now();
+  ca.innerHTML += '<div class="chat-msg ai" id="' + loadingId + '"><div class="chat-bubble" style="color:var(--hint);">正在思考中...</div></div>';
+  ca.scrollTop = ca.scrollHeight;
+  
+  setTimeout(() => {
+    const r = generateAIResponse(question);
+    const loadingEl = document.getElementById(loadingId);
+    if (loadingEl) {
+      loadingEl.querySelector('.chat-bubble').innerHTML = r;
+      loadingEl.querySelector('.chat-bubble').style.color = '';
+    }
+    ca.scrollTop = ca.scrollHeight;
+  }, 800 + Math.random() * 600);
+}
+
+function generateAIResponse(q) {
+  const nickname = profile ? profile.nickname : '';
+  const recentRecs = getRecordsInDays(7);
+  const latest = recentRecs[0];
+  const hasData = latest != null;
+  const latestVal = hasData ? latest.valueMmolL : null;
+  const encourage = hasData ? (latestVal >= 3.9 && latestVal <= 10 ? '你最近的血糖控制得不错，继续保持！' : '虽然有些波动，但坚持记录本身就是很好的习惯！') : '坚持记录血糖是管理的第一步，你做得很好！';
+  
+  // 根据历史数据提供额外上下文
+  let dataContext = '';
+  if (hasData && recentRecs.length >= 2) {
+    const avg = recentRecs.reduce((s,r) => s + r.valueMmolL, 0) / recentRecs.length;
+    const inRange = recentRecs.filter(r => r.valueMmolL >= 3.9 && r.valueMmolL <= 10).length;
+    const rate = Math.round(inRange / recentRecs.length * 100);
+    dataContext = '<br><br>📊 <i>参考你最近的数据：平均血糖' + avg.toFixed(1) + '，达标率' + rate + '%';
+    if (latestVal < recentRecs[1].valueMmolL) dataContext += '，这次比上次好了 👍';
+    else if (latestVal > recentRecs[1].valueMmolL) dataContext += '，比上次略有升高，注意观察';
+    dataContext += '</i>';
+  }
+
+  if (q.includes('偏高') || q.includes('高') || q.includes('怎么办')) {
+    return (nickname ? nickname + '，' : '') + '别担心，血糖偏高是常见的，关键是及时发现和调整 💪<br><br>' +
+      '1️⃣ <b>立即措施</b><br>• 饮用300-500ml温水，促进代谢<br>• 散步20-30分钟（餐后1小时后），帮助降低血糖<br>• 暂停碳水摄入，等待血糖下降<br><br>' +
+      '2️⃣ <b>饮食调整（下一餐开始）</b><br>• 主食减少1/3，用杂粮替代白米<br>• 增加绿叶蔬菜（500g以上）<br>• 选低GI食物：燕麦、荞麦、全麦面包<br>• 进食顺序：蔬菜→蛋白质→主食<br><br>' +
+      '3️⃣ <b>监测建议</b><br>• 2小时后复测血糖<br>• 持续>13.9建议联系医生<br>• >16.7立即就医<br><br>' +
+      '🌟 ' + encourage + dataContext + '<br><br>⚠️ <i>请结合自身情况遵医嘱</i>';
+  }
+  
+  if (q.includes('饮食') || q.includes('吃') || q.includes('午餐') || q.includes('早餐') || q.includes('晚餐')) {
+    let bmiAdvice = '';
+    const bmi = getBMI();
+    if (bmi >= 28) bmiAdvice = '<br>📌 <i>根据你的BMI，建议每日总热量控制在1200-1500kcal，注意控制油脂</i>';
+    else if (bmi >= 24) bmiAdvice = '<br>📌 <i>体重略超，每餐七八分饱，晚餐尤其注意控制</i>';
+    else if (bmi < 18.5) bmiAdvice = '<br>📌 <i>体重偏轻，不要过度限制饮食，保证营养均衡</i>';
+    
+    return (nickname ? nickname + '，' : '') + '好的饮食管理是控糖的关键 🥗<br><br>' +
+      '🥗 <b>推荐搭配</b><br>• 主食：杂粮饭/荞麦面 100-150g（约一拳大小）<br>• 蛋白：清蒸鱼/鸡胸肉 100-150g（约一掌心）<br>• 蔬菜：绿叶菜不限量（每天500g以上）<br>• 加餐：黄瓜、西红柿、少量坚果（10-15g）<br><br>' +
+      '🚫 <b>尽量避免</b><br>• 白米饭大量、白粥（升糖快）<br>• 含糖饮料、果汁<br>• 油炸食品、甜点蛋糕<br>• 高糖水果（荔枝、葡萄、西瓜少量）<br><br>' +
+      '💡 <b>进食技巧</b><br>• 蔬菜→蛋白质→主食（有助控餐后血糖）<br>• 细嚼慢咽，每餐20-30分钟<br>• 定时定量，不要跳餐' + bmiAdvice +
+      '<br><br>🌟 ' + encourage + dataContext;
+  }
+  
+  if (q.includes('运动') || q.includes('锻炼')) {
+    const age = getAge();
+    const complications = profile ? (profile.complications || '无') : '无';
+    let exerciseAdvice = '';
+    
+    if (age > 60) {
+      exerciseAdvice = '🚶 <b>适合你的有氧运动</b>（温和为主）<br>• 快走：每天30分钟，步速舒适不喘<br>• 太极拳/八段锦：每天15-20分钟<br>• 游泳：每周2-3次，对关节友好<br><br>' +
+        '🏋️ <b>轻度抗阻</b>（每周2次）<br>• 弹力带拉伸<br>• 坐姿抬腿<br>• 墙壁俯卧撑<br><br>';
+    } else {
+      exerciseAdvice = '🏃 <b>有氧运动</b>（每周≥150分钟）<br>• 快走/慢跑：每天30分钟，餐后1h进行<br>• 游泳：每周2-3次<br>• 骑车：每次20-40分钟<br><br>' +
+        '🏋️ <b>抗阻训练</b>（每周2-3次）<br>• 弹力带训练<br>• 哑铃/深蹲/俯卧撑<br>• 增强肌肉有助提高胰岛素敏感性<br><br>';
+    }
+    
+    if (complications.includes('糖尿病足') || complications.includes('神经病变')) {
+      exerciseAdvice += '⚠️ <b>足部保护</b>：穿宽松软底鞋，运动后检查双脚，避免长时间站立<br>';
+    }
+    if (complications.includes('视网膜病变')) {
+      exerciseAdvice += '⚠️ <b>眼部保护</b>：避免跳跃类运动和剧烈运动，防止视网膜脱落<br>';
+    }
+    
+    return (nickname ? nickname + '，' : '') + '规律运动是控糖的"天然药物" 💪<br><br>' +
+      exerciseAdvice +
+      '⚠️ 血糖<3.9或>16.7时不运动<br>⚠️ 随身携带糖果防低血糖<br>⚠️ 运动前后各测一次血糖<br><br>' +
+      '🌟 ' + encourage + dataContext;
+  }
+  
+  if (q.includes('用药') || q.includes('药') || q.includes('胰岛素')) {
+    const med = profile ? (profile.medication || '') : '';
+    let medAdvice = '';
+    if (med.length > 0) {
+      medAdvice = '<br>📋 <b>根据你的用药方案</b>：<br><i>' + med + '</i><br><br>';
+      if (med.includes('二甲双胍')) medAdvice += '💊 二甲双胍建议随餐或餐后服用，减少胃肠不适<br>';
+      if (med.includes('胰岛素')) medAdvice += '💉 注射胰岛素后务必按时进食，注意注射部位轮换<br>';
+    }
+    
+    return (nickname ? nickname + '，' : '') + '规范用药是血糖管理的基石 💊<br><br>' +
+      '💊 <b>基本原则</b><br>• 固定时间服药/注射，形成规律<br>• 不要自行调药量或停药<br>• 如出现不适及时联系医生<br><br>' +
+      '⏰ <b>常见服药时间</b><br>• 餐前药（如磺脲类）：三餐前15-30分钟<br>• 餐时药（如二甲双胍）：随餐或餐后<br>• 长效药：每天固定时间<br>• 胰岛素：按医嘱，注射后按时进餐<br><br>' +
+      medAdvice +
+      '🔬 定期复查糖化血红蛋白（每3月一次）<br><br>🌟 ' + encourage + dataContext + '<br><br>⚠️ <i>具体方案请咨询主治医生</i>';
+  }
+  
+  if (q.includes('波动') || q.includes('不稳') || q.includes('原因')) {
+    return (nickname ? nickname + '，' : '') + '血糖波动确实让人烦恼，但找到原因就能改善 🔍<br><br>' +
+      '📊 <b>常见原因</b><br>1. 饮食不规律（用餐时间、食物种类变化）<br>2. 运动量不稳定<br>3. 情绪压力/焦虑/睡眠不足<br>4. 用药不规律（漏服/错服）<br>5. 感染、感冒等疾病<br>6. 女性生理期激素变化<br>7. 天气变化（寒冷时血糖易升高）<br><br>' +
+      '🔍 <b>排查建议</b><br>• 回顾近3天饮食和运动记录<br>• 检查是否漏服药物<br>• 评估最近睡眠质量和情绪<br>• 用7点法监测（三餐前后+睡前）<br><br>' +
+      '💡 <b>稳定血糖的小技巧</b><br>• 固定三餐时间<br>• 每餐碳水含量保持稳定<br>• 规律作息，保证7-8小时睡眠<br><br>🌟 ' + encourage + dataContext;
+  }
+  
+  if (q.includes('低血糖') || q.includes('低')) {
+    return (nickname ? nickname + '，' : '') + '低血糖很危险，但掌握处理方法就不用慌 🚨<br><br>' +
+      '🚨 <b>15-15法则（立即执行）</b><br>1. 进食15g快速碳水：<br>   • 葡萄糖片3-4片（最快）<br>   • 果汁/含糖可乐150ml<br>   • 方糖3-4块<br>   • 蜂蜜1汤匙<br>2. 等待15分钟后复测<br>3. 仍<3.9则重复上述步骤<br><br>' +
+      '✅ <b>恢复后</b><br>• 补充慢碳水：饼干2-3片/面包1片<br>• 如距下餐>1小时，加餐一份<br>• 记录低血糖发生的时间和可能原因<br><br>' +
+      '🔍 <b>常见低血糖原因</b><br>• 用药过量/注射胰岛素后未进食<br>• 运动量突然增大<br>• 饮酒（空腹尤其危险）<br>• 用餐延迟<br><br>' +
+      '⚠️ 反复低血糖需联系医生调整用药方案！<br>⚠️ 意识不清立即拨打120！<br><br>🌟 ' + encourage + dataContext;
+  }
+  
+  // 通用回复
+  return (nickname ? nickname + '，' : '') + '感谢你的提问！ 🩺<br><br>' +
+    '📋 <b>日常控糖要点</b><br>1. 规律监测血糖（每天2-4次）<br>2. 控制碳水摄入，选择低GI食物<br>3. 保持适量运动（每周≥150分钟）<br>4. 按时服药，不要自行调整<br>5. 保持良好心态和充足睡眠<br><br>' +
+    '🌟 ' + encourage + dataContext + '<br><br>💡 你可以问我：<br>• "血糖偏高怎么办"<br>• "今天吃什么好"<br>• "适合我的运动"<br>• "用药时间怎么安排"<br>• "低血糖了怎么办"<br>• "血糖波动大怎么办"';
+}
+
+// ===== 上传检查报告功能 =====
+function triggerImageUpload() {
+  document.getElementById('reportFileInput').click();
+}
+
+function handleReportUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('uploadPreview');
+    const img = document.getElementById('previewImg');
+    const overlay = document.getElementById('analyzingOverlay');
+    const analysis = document.getElementById('reportAnalysis');
+    
+    img.src = e.target.result;
+    preview.style.display = 'block';
+    overlay.style.display = 'flex';
+    analysis.style.display = 'none';
+    
+    // 模拟OCR分析延迟
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      generateMockReportAnalysis();
+    }, 2500);
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeUploadedImage() {
+  document.getElementById('uploadPreview').style.display = 'none';
+  document.getElementById('previewImg').src = '';
+  document.getElementById('reportAnalysis').style.display = 'none';
+  document.getElementById('reportFileInput').value = '';
+}
+
+function generateMockReportAnalysis() {
+  const nickname = profile ? profile.nickname : '';
+  // 模拟检查报告数据
+  const mockIndicators = [
+    { name: '空腹血糖 (FPG)', value: (4.5 + Math.random() * 4).toFixed(1) + ' mmol/L', normal: '3.9-6.1 mmol/L', isAbnormal: Math.random() > 0.5 },
+    { name: '餐后2h血糖', value: (5.5 + Math.random() * 7).toFixed(1) + ' mmol/L', normal: '<7.8 mmol/L', isAbnormal: Math.random() > 0.4 },
+    { name: '糖化血红蛋白 (HbA1c)', value: (5.5 + Math.random() * 3.5).toFixed(1) + '%', normal: '4.0-6.0%', isAbnormal: Math.random() > 0.5 },
+    { name: '总胆固醇 (TC)', value: (3.5 + Math.random() * 3).toFixed(2) + ' mmol/L', normal: '<5.2 mmol/L', isAbnormal: Math.random() > 0.6 },
+    { name: '甘油三酯 (TG)', value: (1.0 + Math.random() * 2.5).toFixed(2) + ' mmol/L', normal: '<1.7 mmol/L', isAbnormal: Math.random() > 0.5 },
+    { name: '肌酐 (Cr)', value: (50 + Math.random() * 80).toFixed(0) + ' μmol/L', normal: '44-133 μmol/L', isAbnormal: Math.random() > 0.8 },
+    { name: '尿微量白蛋白', value: (Math.random() > 0.5 ? (20 + Math.random() * 50).toFixed(1) : (5 + Math.random() * 10).toFixed(1)) + ' mg/L', normal: '<20 mg/L', isAbnormal: Math.random() > 0.7 },
+  ];
+  
+  const abnormalCount = mockIndicators.filter(i => i.isAbnormal).length;
+  
+  let html = '<div class="analysis-header">📋 检查报告解读</div>';
+  html += '<div style="font-size:13px;color:var(--text2);margin-bottom:12px;">AI已为你识别并解读以下指标：</div>';
+  
+  mockIndicators.forEach(ind => {
+    const cls = ind.isAbnormal ? 'abnormal' : 'normal';
+    const icon = ind.isAbnormal ? '⚠️' : '✅';
+    html += '<div class="indicator ' + cls + '">';
+    html += '<div><div class="ind-name">' + icon + ' ' + ind.name + '</div><div style="font-size:11px;color:var(--hint);">参考值：' + ind.normal + '</div></div>';
+    html += '<div class="ind-value">' + ind.value + '</div>';
+    html += '</div>';
+  });
+  
+  // 解读详情
+  html += '<div class="analysis-detail">';
+  html += '<b>📝 综合解读：</b><br><br>';
+  
+  // 根据异常指标生成解读
+  const fpg = mockIndicators[0];
+  if (fpg.isAbnormal) {
+    html += '• <b>空腹血糖</b>偏高，说明基础胰岛素分泌可能不足，建议关注晚餐后和睡前的饮食控制。';
+    if (parseFloat(fpg.value) > 7) html += ' 数值明显偏高，建议与医生沟通是否需要调整用药。';
+    html += '<br>';
+  } else {
+    html += '• <b>空腹血糖</b>在正常范围内，说明基础血糖控制得不错 👍<br>';
+  }
+  
+  const hba1c = mockIndicators[2];
+  if (hba1c.isAbnormal) {
+    html += '• <b>糖化血红蛋白</b>偏高，反映近2-3个月平均血糖偏高。建议加强日常监测，配合饮食运动调整。';
+    if (parseFloat(hba1c.value) > 8) html += ' <span style="color:#C62828;font-weight:500;">建议尽快就医，可能需要调整治疗方案。</span>';
+    html += '<br>';
+  } else {
+    html += '• <b>糖化血红蛋白</b>正常，说明近几个月整体血糖控制良好 ✅<br>';
+  }
+  
+  const tg = mockIndicators[4];
+  if (tg.isAbnormal) {
+    html += '• <b>甘油三酯</b>偏高，可能与饮食中油脂/碳水过多有关。建议减少油炸食品、甜食，增加运动。<br>';
+  }
+  
+  const ualb = mockIndicators[6];
+  if (ualb.isAbnormal) {
+    html += '• <b>尿微量白蛋白</b>偏高，<span style="color:#C62828;font-weight:500;">提示可能存在早期肾损害</span>，建议尽早与肾内科/内分泌科医生沟通。<br>';
+  }
+  
+  if (abnormalCount === 0) {
+    html += '• 所有指标均在正常范围内，控制得非常棒！继续保持良好的生活习惯。<br>';
+  }
+  
+  html += '<br>💡 <b>调整建议：</b><br>';
+  if (abnormalCount <= 1) {
+    html += '• 整体情况不错，继续保持规律用药和健康生活方式<br>• 3个月后复查，关注变化趋势';
+  } else if (abnormalCount <= 3) {
+    html += '• 有几项指标需要关注，建议与主治医生讨论调整方案<br>• 加强饮食控制和运动管理<br>• 1-2个月后复查相关指标';
+  } else {
+    html += '• 多项指标异常，建议尽快就医全面评估<br>• 可能需要调整药物方案<br>• 注意定期监测各项指标变化';
+  }
+  
+  html += '</div>';
+  
+  // 鼓励语
+  html += '<div class="encourage-msg">';
+  if (nickname) html += nickname + '，';
+  if (abnormalCount <= 1) {
+    html += '你的检查报告整体情况很不错！说明你一直在用心管理自己的健康，真的为你感到高兴 🌟 继续保持，下次检查一定会更好！';
+  } else if (abnormalCount <= 3) {
+    html += '有些指标需要关注，但别担心，发现问题就是改善的开始 💪 及时调整方案，一切都会好起来的。你已经很棒了，坚持就是胜利！';
+  } else {
+    html += '检查报告有一些异常指标，不过不用太焦虑 🤗 及时和医生沟通调整方案，一步一步来。每次检查都是了解自己的身体，这是对自己负责的表现！';
+  }
+  html += '</div>';
+  
+  const analysis = document.getElementById('reportAnalysis');
+  analysis.innerHTML = html;
+  analysis.style.display = 'block';
+}
+
+// ===== 个人档案 =====
+function renderProfile() {
+  if (!profile) {
+    document.getElementById('profileView').style.display = 'none';
+    document.getElementById('profileEditForm').style.display = 'none';
+    return;
+  }
+  document.getElementById('profileView').style.display = 'block';
+  document.getElementById('profileEditForm').style.display = 'none';
+  document.getElementById('profileMenu').style.display = 'block';
+  document.getElementById('settingsPage').style.display = 'none';
+  
+  document.getElementById('profileName').textContent = profile.nickname;
+  document.getElementById('profilePhone').textContent = profile.phone.replace(/(\d{3})\d{4}(\d{4})/,'$1****$2');
+  document.getElementById('pGender').textContent = profile.gender==='male'?'男':'女';
+  document.getElementById('pBirth').textContent = profile.birthDate;
+  document.getElementById('pHeightWeight').textContent = (profile.heightCm?profile.heightCm+' cm':'--')+' / '+(profile.weightKg?profile.weightKg+' kg':'--');
+  if (profile.heightCm && profile.weightKg) {
+    const bmi = profile.weightKg / Math.pow(profile.heightCm/100, 2);
+    let bmiText = bmi.toFixed(1);
+    if (bmi < 18.5) bmiText += ' (偏瘦)';
+    else if (bmi < 24) bmiText += ' (正常)';
+    else if (bmi < 28) bmiText += ' (偏胖)';
+    else bmiText += ' (肥胖)';
+    document.getElementById('pBMI').textContent = bmiText;
+  }
+  const typeMap={none:'无糖尿病',prediabetes:'糖尿病前期',type1:'1型',type2:'2型',gestational:'妊娠期',other:'其他'};
+  document.getElementById('pDiabetes').textContent=typeMap[profile.diabetesType]||'--';
+  if(profile.diabetesType==='none'){
+    document.getElementById('pDuration').textContent='0 年（无糖尿病）';
+  } else if(profile.diagnoseDate){
+    const y=((new Date()-new Date(profile.diagnoseDate))/(365.25*24*3600*1000)).toFixed(1);
+    document.getElementById('pDuration').textContent=y+' 年';
+  }else{
+    document.getElementById('pDuration').textContent='未填写';
+  }
+  document.getElementById('pMedication').textContent=profile.medication||'无';
+  document.getElementById('pComplication').textContent=profile.complications||'无';
+  const fm={none:'无',parents:'父母',siblings:'兄弟姐妹',parents_siblings:'父母+兄弟姐妹',other:'其他亲属'};
+  document.getElementById('pFamily').textContent=fm[profile.familyHistory]||'无';
+  document.getElementById('pAllergy').textContent=profile.allergy||'无';
+}
+
+function editProfile() {
+  document.getElementById('profileView').style.display = 'none';
+  document.getElementById('profileEditForm').style.display = 'block';
+  document.getElementById('profileMenu').style.display = 'none';
+  document.getElementById('settingsPage').style.display = 'none';
+  if (profile) {
+    document.getElementById('eNickname').value = profile.nickname||'';
+    document.getElementById('eGender').value = profile.gender||'';
+    document.getElementById('eBirth').value = profile.birthDate||'';
+    document.getElementById('eHeight').value = profile.heightCm||'';
+    document.getElementById('eWeight').value = profile.weightKg||'';
+    document.getElementById('eDiabetesType').value = profile.diabetesType||'type2';
+    document.getElementById('eDiagnoseDate').value = profile.diagnoseDate||'';
+    document.getElementById('eMedication').value = profile.medication||'';
+    document.getElementById('eAllergy').value = profile.allergy==='无'?'':(profile.allergy||'');
+    document.getElementById('eOtherDisease').value = profile.otherDisease==='无'?'':(profile.otherDisease||'');
+    // 触发联动，让表单状态与当前值一致
+    onDiabetesTypeChange('e');
+  }
+}
+
+function updateProfile() {
+  const nickname = document.getElementById('eNickname').value.trim();
+  if (!nickname) { showToast('昵称不能为空'); return; }
+  profile.nickname = nickname;
+  profile.gender = document.getElementById('eGender').value;
+  profile.birthDate = document.getElementById('eBirth').value;
+  profile.heightCm = parseFloat(document.getElementById('eHeight').value)||profile.heightCm;
+  profile.weightKg = parseFloat(document.getElementById('eWeight').value)||profile.weightKg;
+  profile.diabetesType = document.getElementById('eDiabetesType').value;
+  profile.diagnoseDate = document.getElementById('eDiagnoseDate').value;
+  profile.medication = document.getElementById('eMedication').value.trim();
+  profile.allergy = document.getElementById('eAllergy').value.trim()||'无';
+  profile.otherDisease = document.getElementById('eOtherDisease').value.trim()||'无';
+  
+  localStorage.setItem('user_profile', JSON.stringify(profile));
+  if (currentUser) localStorage.setItem('user_profile_'+currentUser.phone, JSON.stringify(profile));
+  
+  // 同步账号信息到列表
+  if (currentUser) {
+    let accs = getAllAccounts();
+    const idx = accs.findIndex(a => a.phone === currentUser.phone);
+    if (idx >= 0) { accs[idx].nickname = nickname; saveAllAccounts(accs); }
+  }
+  
+  document.getElementById('headerUserName').textContent = '👤 ' + profile.nickname;
+  showToast('✅ 已更新');
+  renderProfile();
+}
+
+function doLogout() {
+  if (!confirm('确定要退出当前账号吗？')) return;
+  // 先保存当前账号数据
+  syncCurrentAccountToStorage();
+  if (currentUser && currentUser.phone) {
+    localStorage.setItem('glucose_records_' + currentUser.phone, JSON.stringify(records));
+  }
+  localStorage.removeItem('current_user');
+  currentUser = null;
+  profile = null;
+  records = [];
+  localStorage.removeItem('user_profile');
+  isAddingNewAccount = false;
+  document.getElementById('appContainer').classList.remove('active');
+  document.getElementById('loginPhone').value = '';
+  document.getElementById('loginCode').value = '';
+  document.getElementById('codeHint').className = 'code-hint';
+  document.getElementById('codeHint').innerHTML = '';
+  const btn = document.getElementById('btnSendCode');
+  btn.disabled = false; btn.textContent = '获取验证码';
+  if (codeTimer) clearInterval(codeTimer);
+  showLogin();
+}
+
+// ===== 多账号管理 =====
+function getAllAccounts() {
+  return JSON.parse(localStorage.getItem('all_accounts') || '[]');
+}
+
+function saveAllAccounts(accounts) {
+  localStorage.setItem('all_accounts', JSON.stringify(accounts));
+}
+
+function syncCurrentAccountToStorage() {
+  // 将当前账号的档案和数据同步到all_accounts
+  if (!currentUser) return;
+  const accounts = getAllAccounts();
+  const idx = accounts.findIndex(a => a.phone === currentUser.phone);
+  if (idx >= 0) {
+    accounts[idx].nickname = profile ? profile.nickname : '';
+    accounts[idx].hasProfile = !!profile;
+    accounts[idx].lastActive = new Date().toISOString();
+    saveAllAccounts(accounts);
+  }
+}
+
+function renderAccountList() {
+  const accounts = getAllAccounts();
+  const container = document.getElementById('accountList');
+  document.getElementById('accountCount').textContent = '（' + accounts.length + '/3）';
+  
+  let html = '';
+  accounts.forEach((acc, i) => {
+    const isActive = currentUser && acc.phone === currentUser.phone;
+    const initial = (acc.nickname || acc.phone.slice(-1)) || '?';
+    html += '<div class="account-card' + (isActive ? ' active' : '') + '" onclick="switchAccount(\'' + acc.phone + '\')">';
+    html += '<div class="account-avatar">' + initial.charAt(0).toUpperCase() + '</div>';
+    html += '<div class="account-info"><div class="account-name">' + (acc.nickname || '未设置昵称') + '</div>';
+    html += '<div class="account-phone">' + acc.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') + '</div></div>';
+    if (isActive) {
+      html += '<span class="account-badge">当前</span>';
+    }
+    if (!isActive) {
+      html += '<button class="account-delete" onclick="event.stopPropagation();deleteAccount(\'' + acc.phone + '\')" title="删除">✕</button>';
+    }
+    html += '</div>';
+  });
+  container.innerHTML = html;
+  
+  // 添加按钮状态
+  const addBtn = document.getElementById('btnAddAccount');
+  if (accounts.length >= 3) {
+    addBtn.disabled = true;
+    addBtn.textContent = '最多支持3个账号';
+    addBtn.style.opacity = '0.5';
+  } else {
+    addBtn.disabled = false;
+    addBtn.textContent = '+ 添加新账号';
+    addBtn.style.opacity = '1';
+  }
+}
+
+function switchAccount(phone) {
+  if (currentUser && currentUser.phone === phone) return;
+  
+  // 保存当前账号数据到专属key
+  syncCurrentAccountToStorage();
+  if (currentUser && currentUser.phone) {
+    localStorage.setItem('glucose_records_' + currentUser.phone, JSON.stringify(records));
+  }
+  
+  const accounts = getAllAccounts();
+  const target = accounts.find(a => a.phone === phone);
+  if (!target) return;
+  
+  // 彻底清空当前内存数据，防止数据串号
+  records = [];
+  profile = null;
+  
+  // 切换到目标账号
+  currentUser = { phone: target.phone, loginTime: new Date().toISOString() };
+  localStorage.setItem('current_user', JSON.stringify(currentUser));
+  
+  // 从专属key加载目标账号的数据
+  const savedProfile = JSON.parse(localStorage.getItem('user_profile_' + phone) || 'null');
+  profile = savedProfile;
+  if (profile) {
+    localStorage.setItem('user_profile', JSON.stringify(profile));
+  } else {
+    localStorage.removeItem('user_profile');
+  }
+  
+  // 加载该账号专属的血糖记录
+  records = JSON.parse(localStorage.getItem('glucose_records_' + phone) || '[]');
+  
+  // 刷新UI
+  document.getElementById('headerUserName').textContent = '👤 ' + (profile ? profile.nickname : '新用户');
+  closeSettings();
+  renderProfile();
+  refreshHome();
+  renderAccountList();
+  showToast('✅ 已切换到 ' + (target.nickname || phone));
+}
+
+function deleteAccount(phone) {
+  if (!confirm('确定要删除此账号吗？该账号的所有数据将被清除。')) return;
+  
+  let accounts = getAllAccounts();
+  accounts = accounts.filter(a => a.phone !== phone);
+  saveAllAccounts(accounts);
+  
+  // 清除该账号的数据
+  localStorage.removeItem('user_profile_' + phone);
+  localStorage.removeItem('glucose_records_' + phone);
+  
+  renderAccountList();
+  showToast('已删除');
+}
+
+function addNewAccount() {
+  const accounts = getAllAccounts();
+  if (accounts.length >= 3) {
+    showToast('最多支持3个账号');
+    return;
+  }
+  
+  // 记录当前账号（取消时恢复用）
+  previousAccountPhone = currentUser ? currentUser.phone : null;
+  
+  // 保存当前账号状态
+  syncCurrentAccountToStorage();
+  if (currentUser && currentUser.phone) {
+    localStorage.setItem('glucose_records_' + currentUser.phone, JSON.stringify(records));
+  }
+  
+  // 彻底清空内存数据
+  records = [];
+  profile = null;
+  localStorage.removeItem('current_user');
+  localStorage.removeItem('user_profile');
+  currentUser = null;
+  
+  // 清空输入框
+  document.getElementById('loginPhone').value = '';
+  document.getElementById('loginCode').value = '';
+  document.getElementById('codeHint').className = 'code-hint';
+  document.getElementById('codeHint').innerHTML = '';
+  const btn = document.getElementById('btnSendCode');
+  btn.disabled = false; btn.textContent = '获取验证码';
+  if (codeTimer) clearInterval(codeTimer);
+  
+  // 标记是从添加账号进来的，显示返回按钮
+  isAddingNewAccount = true;
+  document.getElementById('appContainer').classList.remove('active');
+  showLogin();
+  showToast('请注册/登录新账号');
+}
+
+// ===== 设置页 =====
+function openSettings() {
+  document.getElementById('profileView').style.display = 'none';
+  document.getElementById('profileMenu').style.display = 'none';
+  document.getElementById('settingsPage').style.display = 'block';
+  document.getElementById('profileEditForm').style.display = 'none';
+  renderAccountList();
+  loadToggleSettings();
+}
+
+function closeSettings() {
+  document.getElementById('settingsPage').style.display = 'none';
+  document.getElementById('profileView').style.display = 'block';
+  document.getElementById('profileMenu').style.display = 'block';
+}
+
+function loadToggleSettings() {
+  const settings = JSON.parse(localStorage.getItem('app_settings') || '{}');
+  const reminderOn = settings.reminder !== false; // 默认开
+  const soundOn = settings.sound !== false;
+  
+  const rt = document.getElementById('reminderToggle');
+  const rd = document.getElementById('reminderDot');
+  const st = document.getElementById('soundToggle');
+  const sd = document.getElementById('soundDot');
+  
+  if (reminderOn) { rt.classList.add('on'); } else { rt.classList.remove('on'); }
+  if (soundOn) { st.classList.add('on'); } else { st.classList.remove('on'); }
+}
+
+function toggleReminder() {
+  const settings = JSON.parse(localStorage.getItem('app_settings') || '{}');
+  if (settings.reminder === undefined) settings.reminder = true;
+  settings.reminder = !settings.reminder;
+  localStorage.setItem('app_settings', JSON.stringify(settings));
+  loadToggleSettings();
+  showToast(settings.reminder ? '🔔 测量提醒已开启' : '🔕 测量提醒已关闭');
+}
+
+function toggleSound() {
+  const settings = JSON.parse(localStorage.getItem('app_settings') || '{}');
+  if (settings.sound === undefined) settings.sound = true;
+  settings.sound = !settings.sound;
+  localStorage.setItem('app_settings', JSON.stringify(settings));
+  loadToggleSettings();
+  showToast(settings.sound ? '🔊 提示音已开启' : '🔇 提示音已关闭');
+}
+
+function exportData() {
+  const data = {
+    profile: profile,
+    records: getUserRecords(),
+    exportTime: new Date().toISOString(),
+    version: '1.0.0'
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '糖智未来_数据备份_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📤 数据已导出');
+}
+
+function clearData() {
+  if (!confirm('确定要清除当前账号的所有数据吗？此操作不可撤销！')) return;
+  if (!confirm('再次确认：所有血糖记录和档案信息将被永久删除。')) return;
+  
+  if (currentUser) {
+    localStorage.removeItem('user_profile_' + currentUser.phone);
+    localStorage.removeItem('glucose_records_' + currentUser.phone);
+  }
+  localStorage.removeItem('user_profile');
+  localStorage.removeItem('glucose_records');
+  localStorage.removeItem('current_user');
+  
+  records = [];
+  profile = null;
+  currentUser = null;
+  
+  document.getElementById('appContainer').classList.remove('active');
+  showLogin();
+  showToast('数据已清除');
+}
+
+// ===== 弹窗 =====
+function openModal(title, content) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalContent').innerHTML = content;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function showAbout() {
+  openModal('关于糖智未来',
+    '<div style="text-align:center;margin-bottom:16px;"><div style="font-size:48px;">🍬</div>' +
+    '<div style="font-size:18px;font-weight:700;color:var(--primary-dark);margin-top:8px;">糖智未来</div>' +
+    '<div style="font-size:12px;color:var(--hint);margin-top:4px;">版本 v1.0.0</div></div>' +
+    '<p>糖智未来是一款面向糖尿病患者的智能血糖管理小程序，提供以下核心功能：</p>' +
+    '<ul style="margin:8px 0 8px 16px;line-height:2;">' +
+    '<li>📝 血糖记录与趋势追踪</li>' +
+    '<li>📊 个性化饮食/运动建议报告</li>' +
+    '<li>🤖 AI 医生智能问答</li>' +
+    '<li>📷 检查报告拍照解读</li>' +
+    '<li>📋 完整健康档案管理</li>' +
+    '<li>👥 多账号管理（最多3个）</li>' +
+    '</ul>' +
+    '<p style="color:var(--hint);font-size:12px;margin-top:12px;">© 2026 糖智未来团队<br>本产品仅供参考，不构成医疗建议</p>'
+  );
+}
+
+function showHelp() {
+  openModal('使用帮助',
+    '<div style="line-height:2;">' +
+    '<b>📝 如何记录血糖？</b><br>' +
+    '点击底部「记录」→ 选择测量时点 → 输入血糖值 → 保存<br><br>' +
+    '<b>📊 如何查看个性化报告？</b><br>' +
+    '在首页或记录页，点击任意一条记录即可生成专属的饮食/运动建议报告<br><br>' +
+    '<b>🤖 AI 医生能做什么？</b><br>' +
+    '提供饮食建议、运动方案、用药提醒、波动分析等。还可以上传检查报告单，AI会帮你解读指标<br><br>' +
+    '<b>👥 如何切换账号？</b><br>' +
+    '进入「我的」→「设置」→「账号管理」，最多可添加3个独立账号<br><br>' +
+    '<b>📷 如何拍照解读报告？</b><br>' +
+    '在AI医生页面点击「上传检查报告」，选择或拍摄报告单照片<br><br>' +
+    '<span style="color:var(--hint);font-size:12px;">如有更多问题，请联系客服</span>' +
+    '</div>'
+  );
+}
+
+function showPrivacy() {
+  openModal('隐私政策',
+    '<div style="line-height:1.8;font-size:13px;">' +
+    '<b>数据收集</b><br>' +
+    '我们仅收集您主动提供的血糖数据、健康档案信息，用于生成个性化建议。<br><br>' +
+    '<b>数据存储</b><br>' +
+    '您的所有数据仅存储在本地设备上，不会上传至云端服务器。您可以随时在设置中清除所有数据。<br><br>' +
+    '<b>数据安全</b><br>' +
+    '我们采用严格的数据安全措施，确保您的健康信息不被泄露。<br><br>' +
+    '<b>数据共享</b><br>' +
+    '未经您的明确同意，我们不会将您的任何数据共享给第三方。<br><br>' +
+    '<b>账号管理</b><br>' +
+    '支持最多3个独立账号，每个账号数据完全隔离。删除账号时，相关数据将一并清除。<br><br>' +
+    '<span style="color:var(--hint);">更新日期：2026年7月14日</span>' +
+    '</div>'
+  );
+}
+
+// ===== 多账号数据隔离：覆盖saveRecord =====
+const _origSaveRecord = saveRecord;
+saveRecord = function() {
+  const value = parseFloat(document.getElementById('glucoseInput').value);
+  const note = document.getElementById('glucoseNote').value.trim();
+  if (!selectedSlot) { showToast('请选择测量时点'); return; }
+  if (!value || value < 1 || value > 35) { showToast('请输入有效血糖值 (1-35)'); return; }
+  const record = {
+    id: Date.now(), valueMmolL: value, context: selectedSlot,
+    measuredAt: new Date().toISOString(), note: note,
+    userPhone: currentUser ? currentUser.phone : ''
+  };
+  records.unshift(record);
+  // 同时保存到账号专属存储
+  localStorage.setItem('glucose_records', JSON.stringify(records));
+  if (currentUser) {
+    localStorage.setItem('glucose_records_' + currentUser.phone, JSON.stringify(records));
+    // 同步到管理后台数据
+    if (typeof syncToAdminStore === 'function') syncToAdminStore();
+  }
+  
+  let msg = '✅ 记录已保存';
+  if (value < 3.9) msg = '⚠️ 低血糖！立即补充15g快速碳水（葡萄糖片/果汁），15分钟后复测';
+  else if (value > 13.9) msg = '⚠️ 血糖偏高，2小时后复测，持续>16.7请就医';
+  else if (value > 10) msg = '💡 血糖略高，注意控制碳水摄入';
+  showToast(msg);
+  document.getElementById('glucoseInput').value = '';
+  document.getElementById('glucoseNote').value = '';
+  document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+  selectedSlot = '';
+  renderHistory();
+  refreshHome();
+};
+
+// ===== 初始化时加载当前账号数据 =====
+(function loadAccountData() {
+  if (currentUser) {
+    const saved = localStorage.getItem('glucose_records_' + currentUser.phone);
+    if (saved) {
+      records = JSON.parse(saved);
+      localStorage.setItem('glucose_records', JSON.stringify(records));
+    }
+  }
+})();
+
+
+// ===== 语音输入功能 =====
+let recognition = null;
+let isRecording = false;
+
+function initSpeechRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return null;
+  const rec = new SpeechRecognition();
+  rec.lang = 'zh-CN';
+  rec.continuous = false;
+  rec.interimResults = true;
+  rec.onresult = function(event) {
+    let transcript = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+    document.getElementById('chatInput').value = transcript;
+    if (event.results[event.resultIndex].isFinal) {
+      stopVoiceRecording();
+      // Auto send after voice input
+      setTimeout(() => sendChat(), 300);
+    }
+  };
+  rec.onerror = function(event) {
+    console.error('Speech recognition error:', event.error);
+    stopVoiceRecording();
+    if (event.error === 'not-allowed') {
+      showToast('请允许麦克风权限后重试');
+    } else if (event.error === 'no-speech') {
+      showToast('没有检测到语音，请重试');
+    } else {
+      showToast('语音识别失败：' + event.error);
+    }
+  };
+  rec.onend = function() {
+    if (isRecording) stopVoiceRecording();
+  };
+  return rec;
+}
+
+function toggleVoiceInput() {
+  if (isRecording) {
+    stopVoiceRecording();
+  } else {
+    startVoiceRecording();
+  }
+}
+
+function startVoiceRecording() {
+  if (!recognition) recognition = initSpeechRecognition();
+  if (!recognition) {
+    showToast('您的浏览器不支持语音输入，请使用Chrome或Safari');
+    return;
+  }
+  try {
+    recognition.start();
+    isRecording = true;
+    document.getElementById('voiceBtn').classList.add('recording');
+    document.getElementById('voiceBtn').textContent = '⏹️';
+    document.getElementById('voiceStatus').classList.add('show');
+  } catch(e) {
+    console.error('Failed to start recognition:', e);
+    showToast('语音启动失败，请重试');
+  }
+}
+
+function stopVoiceRecording() {
+  if (recognition && isRecording) {
+    try { recognition.stop(); } catch(e) {}
+  }
+  isRecording = false;
+  document.getElementById('voiceBtn').classList.remove('recording');
+  document.getElementById('voiceBtn').textContent = '🎤';
+  document.getElementById('voiceStatus').classList.remove('show');
+}
+
+// ===== 管理后台 =====
+const ADMIN_PASSWORD = 'tangzhi2026';
+let adminLoggedIn = false;
+let currentAdminViewingPhone = null;
+
+function openAdminFromLogin() {
+  // From login page, go to admin page
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('page-admin').style.display = 'block';
+  document.getElementById('adminLoginView').style.display = 'block';
+  document.getElementById('adminDashboard').style.display = 'none';
+}
+
+function openAdminPage() {
+  // From within app (profile page)
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+  document.getElementById('page-admin').style.display = 'block';
+  document.getElementById('adminLoginView').style.display = 'block';
+  document.getElementById('adminDashboard').style.display = 'none';
+}
+
+function adminLogin() {
+  const pwd = document.getElementById('adminPassword').value;
+  if (pwd === ADMIN_PASSWORD) {
+    adminLoggedIn = true;
+    document.getElementById('adminLoginView').style.display = 'none';
+    document.getElementById('adminDashboard').style.display = 'block';
+    renderAdminDashboard();
+  } else {
+    showToast('密码错误，默认密码：tangzhi2026');
+  }
+}
+
+function adminLogout() {
+  adminLoggedIn = false;
+  document.getElementById('adminPassword').value = '';
+  adminBackToApp();
+}
+
+function adminBackToApp() {
+  document.getElementById('page-admin').style.display = 'none';
+  if (currentUser && currentUser.phone) {
+    document.getElementById('appContainer').classList.add('active');
+    document.getElementById('page-home').style.display = 'block';
+    document.getElementById('page-home').classList.add('active');
+    refreshHome();
+  } else {
+    showLogin();
+  }
+}
+
+function getAllUserData() {
+  // Collect all user data from localStorage
+  const accounts = JSON.parse(localStorage.getItem('all_accounts') || '[]');
+  const usersData = [];
+  
+  // Get data for each known account
+  const phoneSet = new Set(accounts.map(a => a.phone));
+  
+  // Also scan localStorage for any phone-specific keys
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    const match = key.match(/^user_profile_(\d{11})$/);
+    if (match) phoneSet.add(match[1]);
+  }
+  
+  phoneSet.forEach(phone => {
+    const userProfile = JSON.parse(localStorage.getItem('user_profile_' + phone) || 'null');
+    const userRecords = JSON.parse(localStorage.getItem('glucose_records_' + phone) || '[]');
+    const accountInfo = accounts.find(a => a.phone === phone) || {};
+    
+    usersData.push({
+      phone: phone,
+      nickname: userProfile ? userProfile.nickname : (accountInfo.nickname || '未设置'),
+      hasProfile: !!userProfile,
+      profile: userProfile,
+      records: userRecords,
+      recordCount: userRecords.length,
+      lastRecord: userRecords.length > 0 ? userRecords[0].measuredAt : null,
+      accountInfo: accountInfo
+    });
+  });
+  
+  return usersData;
+}
+
+function renderAdminDashboard() {
+  const usersData = getAllUserData();
+  const totalUsers = usersData.length;
+  const totalRecords = usersData.reduce((s, u) => s + u.recordCount, 0);
+  const activeUsers = usersData.filter(u => u.recordCount > 0).length;
+  const completedProfiles = usersData.filter(u => u.hasProfile).length;
+  
+  // Stats grid
+  document.getElementById('adminStatsGrid').innerHTML = 
+    '<div class="admin-stat-card"><div class="num">' + totalUsers + '</div><div class="desc">注册用户</div></div>' +
+    '<div class="admin-stat-card"><div class="num">' + activeUsers + '</div><div class="desc">活跃用户</div></div>' +
+    '<div class="admin-stat-card"><div class="num">' + totalRecords + '</div><div class="desc">总记录数</div></div>' +
+    '<div class="admin-stat-card"><div class="num">' + completedProfiles + '</div><div class="desc">已建档</div></div>';
+  
+  // User list
+  let listHtml = '';
+  usersData.forEach((u, idx) => {
+    const lastTime = u.lastRecord ? new Date(u.lastRecord).toLocaleDateString('zh-CN') : '无记录';
+    const avgValue = u.records.length > 0 ? (u.records.reduce((s,r) => s + r.valueMmolL, 0) / u.records.length).toFixed(1) : '--';
+    listHtml += '<div class="admin-user-item" onclick="viewUserDetail(\'' + u.phone + '\')">' +
+      '<div class="admin-user-header">' +
+      '<span class="admin-user-name">' + (u.nickname || '用户' + (idx+1)) + '</span>' +
+      '<span class="admin-user-phone">' + u.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') + '</span>' +
+      '</div>' +
+      '<div class="admin-user-stats">' +
+      '<span>📝 ' + u.recordCount + '条记录</span>' +
+      '<span>📊 平均' + avgValue + '</span>' +
+      '<span>🕐 ' + lastTime + '</span>' +
+      '</div>' +
+      '</div>';
+  });
+  
+  if (usersData.length === 0) {
+    listHtml = '<div style="text-align:center;padding:30px;color:var(--hint);">暂无用户数据</div>';
+  }
+  
+  document.getElementById('adminUserList').innerHTML = listHtml;
+  document.getElementById('adminUserDetail').style.display = 'none';
+}
+
+function viewUserDetail(phone) {
+  currentAdminViewingPhone = phone;
+  const usersData = getAllUserData();
+  const user = usersData.find(u => u.phone === phone);
+  if (!user) return;
+  
+  document.getElementById('adminUserList').style.display = 'none';
+  document.getElementById('adminStatsGrid').style.display = 'none';
+  const detailDiv = document.getElementById('adminUserDetail');
+  detailDiv.style.display = 'block';
+  
+  let html = '<button class="admin-back-btn" onclick="backToUserList()">← 返回用户列表</button>';
+  
+  // Profile info
+  html += '<div class="admin-detail-card"><div class="admin-detail-title">📋 个人档案</div>';
+  if (user.profile) {
+    const p = user.profile;
+    html += '<div style="font-size:13px;line-height:2;color:var(--text2);">';
+    html += '<b>昵称：</b>' + (p.nickname || '--') + '<br>';
+    html += '<b>性别：</b>' + (p.gender === 'M' ? '男' : '女') + '<br>';
+    html += '<b>出生日期：</b>' + (p.birthDate || '--') + '<br>';
+    html += '<b>身高/体重：</b>' + (p.heightCm || '--') + 'cm / ' + (p.weightKg || '--') + 'kg<br>';
+    html += '<b>糖尿病类型：</b>' + getDiabetesTypeName(p.diabetesType) + '<br>';
+    html += '<b>用药情况：</b>' + (p.medication || '无') + '<br>';
+    html += '<b>并发症：</b>' + (p.complications || '无') + '<br>';
+    html += '<b>家族史：</b>' + (p.familyHistory || '无') + '<br>';
+    html += '<b>建档时间：</b>' + (p.createdAt ? new Date(p.createdAt).toLocaleDateString('zh-CN') : '--');
+    html += '</div>';
+  } else {
+    html += '<div style="color:var(--hint);font-size:13px;">未建立个人档案</div>';
+  }
+  html += '</div>';
+  
+  // Records
+  html += '<div class="admin-detail-card"><div class="admin-detail-title">📊 血糖记录（共' + user.records.length + '条）</div>';
+  if (user.records.length > 0) {
+    user.records.slice(0, 20).forEach(r => {
+      const val = r.valueMmolL;
+      let badgeCls = 'badge-green', status = '正常';
+      if (val < 3.9) { badgeCls = 'badge-red'; status = '偏低'; }
+      else if (val > 10) { badgeCls = 'badge-red'; status = '偏高'; }
+      else if (val > 7.8 && r.mealContext !== 'fasting') { badgeCls = 'badge-orange'; status = '略高'; }
+      else if (val > 6.1 && (r.mealContext === 'fasting' || !r.mealContext)) { badgeCls = 'badge-orange'; status = '略高'; }
+      
+      html += '<div class="admin-record-row">' +
+        '<span>' + new Date(r.measuredAt).toLocaleString('zh-CN') + '</span>' +
+        '<span>' + val + ' mmol/L</span>' +
+        '<span class="badge ' + badgeCls + '">' + status + '</span>' +
+        '</div>';
+    });
+    if (user.records.length > 20) {
+      html += '<div style="text-align:center;padding:8px;color:var(--hint);font-size:12px;">仅显示最近20条，共' + user.records.length + '条</div>';
+    }
+  } else {
+    html += '<div style="color:var(--hint);font-size:13px;">暂无血糖记录</div>';
+  }
+  html += '</div>';
+  
+  // Report summary
+  if (user.records.length >= 3) {
+    const recs = user.records;
+    const avg = recs.reduce((s,r) => s + r.valueMmolL, 0) / recs.length;
+    const max = Math.max(...recs.map(r => r.valueMmolL));
+    const min = Math.min(...recs.map(r => r.valueMmolL));
+    const inRange = recs.filter(r => r.valueMmolL >= 3.9 && r.valueMmolL <= 10).length;
+    const rate = Math.round(inRange / recs.length * 100);
+    
+    html += '<div class="admin-detail-card"><div class="admin-detail-title">📈 数据摘要</div>';
+    html += '<div style="font-size:13px;line-height:2;color:var(--text2);">';
+    html += '<b>平均血糖：</b>' + avg.toFixed(1) + ' mmol/L<br>';
+    html += '<b>最高/最低：</b>' + max.toFixed(1) + ' / ' + min.toFixed(1) + ' mmol/L<br>';
+    html += '<b>达标率：</b>' + rate + '%<br>';
+    html += '<b>测量频次：</b>' + recs.length + '次';
+    html += '</div></div>';
+  }
+  
+  detailDiv.innerHTML = html;
+}
+
+function getDiabetesTypeName(type) {
+  const map = { 'none': '无糖尿病', 'type1': '1型', 'type2': '2型', 'gestational': '妊娠期', 'other': '其他特殊类型' };
+  return map[type] || type || '--';
+}
+
+function backToUserList() {
+  document.getElementById('adminUserDetail').style.display = 'none';
+  document.getElementById('adminUserList').style.display = 'block';
+  document.getElementById('adminStatsGrid').style.display = 'grid';
+  currentAdminViewingPhone = null;
+}
+
+function adminExportData() {
+  const usersData = getAllUserData();
+  const exportData = {
+    exportTime: new Date().toISOString(),
+    totalUsers: usersData.length,
+    users: usersData
+  };
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '糖智未来_数据导出_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ 数据已导出');
+}
+
+// Sync current user data to a shared location for admin access
+function syncToAdminStore() {
+  if (!currentUser || !currentUser.phone) return;
+  const adminStore = JSON.parse(localStorage.getItem('_admin_data_store') || '{}');
+  adminStore[currentUser.phone] = {
+    phone: currentUser.phone,
+    profile: profile,
+    records: records,
+    lastSync: new Date().toISOString()
+  };
+  localStorage.setItem('_admin_data_store', JSON.stringify(adminStore));
+}
+
+// Add sync call to existing save functions - patch saveRecord
+const _origSaveRecord = typeof saveRecord === 'function' ? saveRecord : null;
+
+// Patch: after every record save, sync to admin store
+const _observer = new MutationObserver(function() {
+  // This is a lightweight hook - we'll add sync calls in key places
+});
+</script>
+</body>
+</html>
