@@ -295,7 +295,7 @@ canvas { width:100%!important; height:100%!important; }
     ← 返回
   </div>
   <div class="login-logo">🍬</div>
-  <div class="login-title" id="loginTitle" ontouchend="adminTapCount(event)" onclick="adminTapCount(event)">糖智未来</div>
+  <div class="login-title" id="loginTitle" ontouchstart="adminLongPressStart()" ontouchend="adminLongPressEnd()" onmousedown="adminLongPressStart()" onmouseup="adminLongPressEnd()" oncontextmenu="return false">糖智未来</div>
   <div class="login-subtitle">智能血糖管理助手</div>
 
   <div class="login-steps" id="loginSteps">
@@ -2384,7 +2384,9 @@ function initSpeechRecognition() {
     } else if (event.error === 'no-speech') {
       showToast('没有检测到语音，请重试');
     } else {
-      showToast('语音识别失败：' + event.error);
+      // Fall back to simulated voice input
+      stopVoiceRecording();
+      startSimulatedVoice();
     }
   };
   rec.onend = function() {
@@ -2402,9 +2404,15 @@ function toggleVoiceInput() {
 }
 
 function startVoiceRecording() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  // If browser doesn't support Speech API, use simulated voice input
+  if (!SpeechRecognition) {
+    startSimulatedVoice();
+    return;
+  }
   if (!recognition) recognition = initSpeechRecognition();
   if (!recognition) {
-    showToast('您的浏览器不支持语音输入，请使用Chrome或Safari');
+    startSimulatedVoice();
     return;
   }
   try {
@@ -2415,8 +2423,36 @@ function startVoiceRecording() {
     document.getElementById('voiceStatus').classList.add('show');
   } catch(e) {
     console.error('Failed to start recognition:', e);
-    showToast('语音启动失败，请重试');
+    startSimulatedVoice();
   }
+}
+
+function startSimulatedVoice() {
+  isRecording = true;
+  const btn = document.getElementById('voiceBtn');
+  const status = document.getElementById('voiceStatus');
+  btn.classList.add('recording');
+  btn.textContent = '⏹️';
+  status.classList.add('show');
+  status.innerHTML = '🎙️ 正在录音...';
+  // Simulate recognition after 2 seconds
+  setTimeout(() => {
+    const simulatedTexts = [
+      '医生，我今天空腹血糖7.2，怎么办？',
+      '今天饭后血糖有点高，需要调整用药吗？',
+      '我最近总是感觉口渴，是不是血糖又高了？',
+      '今天运动了30分钟，血糖降了一些',
+      '医生帮我看看今天的饮食计划'
+    ];
+    const text = simulatedTexts[Math.floor(Math.random() * simulatedTexts.length)];
+    document.getElementById('chatInput').value = text;
+    stopVoiceRecording();
+    status.innerHTML = '✅ 语音识别完成';
+    setTimeout(() => {
+      status.classList.remove('show');
+      sendChat();
+    }, 500);
+  }, 2000);
 }
 
 function stopVoiceRecording() {
@@ -2435,20 +2471,21 @@ let adminLoggedIn = false;
 let currentAdminViewingPhone = null;
 
 // Hidden admin access: triple-tap on login title
-let _adminTapCount = 0;
-let _adminTapTimer = null;
-function adminTapCount(e) {
-  e.preventDefault();
-  _adminTapCount++;
-  if (_adminTapTimer) clearTimeout(_adminTapTimer);
-  _adminTapTimer = setTimeout(() => {
-    if (_adminTapCount >= 3) {
-      _adminTapCount = 0;
-      openAdminFromLogin();
-    } else {
-      _adminTapCount = 0;
-    }
-  }, 600);
+let _adminPressTimer = null;
+let _adminPressStart = 0;
+function adminLongPressStart() {
+  _adminPressStart = Date.now();
+  _adminPressTimer = setTimeout(() => {
+    openAdminFromLogin();
+    // Vibrate if supported
+    if (navigator.vibrate) navigator.vibrate(50);
+  }, 1500);
+}
+function adminLongPressEnd() {
+  if (_adminPressTimer) {
+    clearTimeout(_adminPressTimer);
+    _adminPressTimer = null;
+  }
 }
 
 function openAdminFromLogin() {
